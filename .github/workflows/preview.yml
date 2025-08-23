@@ -50,7 +50,7 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy Preview to Vercel
-        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --confirm --prebuilt
+        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
