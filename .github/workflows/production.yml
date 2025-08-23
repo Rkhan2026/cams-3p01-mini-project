@@ -47,7 +47,7 @@ jobs:
 
       - name: Deploy Prisma Migrations
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_PRISMA_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
         run: npx prisma migrate deploy
 
       - name: Install Vercel CLI
