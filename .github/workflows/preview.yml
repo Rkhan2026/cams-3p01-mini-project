@@ -3,7 +3,7 @@ name: Preview Deployment Pipeline
 on:
   push:
     branches:
-      - develop # or any branch you use for staging
+      - testing # or any branch you use for staging
 
 jobs:
   build:
