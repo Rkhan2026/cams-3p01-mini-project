@@ -1,7 +1,418 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Button from "@/components/ui/Button";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+
+// --- Reusable UI & Icon Components (can be moved to separate files) ---
+
+const Button = ({ onClick, className, children, ...props }) => (
+  <button
+    onClick={onClick}
+    className={`px-3 py-1.5 rounded-md text-xs font-semibold text-white transition-transform duration-200 hover:scale-105 ${className}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const CheckIcon = () => (
+  <svg
+    className="w-4 h-4 mr-1"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 13l4 4L19 7"
+    />
+  </svg>
+);
+const XIcon = () => (
+  <svg
+    className="w-4 h-4 mr-1"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
+);
+const CalendarIcon = () => (
+  <svg
+    className="w-4 h-4 mr-1"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
+  </svg>
+);
+const UserAddIcon = () => (
+  <svg
+    className="w-4 h-4 mr-1"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+    />
+  </svg>
+);
+const DownloadIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+    />
+  </svg>
+);
+const ArrowLeftIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+    />
+  </svg>
+);
+
+// --- Child Components ---
+
+const StatPill = ({ label, value, color, isActive, onClick }) => {
+  const baseStyle =
+    "flex items-center justify-center text-center p-4 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1";
+
+  // Handle 'black' color directly, as it doesn't use shades like other colors.
+  const activeStyle =
+    color === "black"
+      ? `bg-black text-white shadow-lg`
+      : `bg-${color}-600 text-white shadow-lg`;
+
+  const inactiveTextColor =
+    color === "black" ? "text-black" : `text-${color}-600`;
+
+  const inactiveStyle = `bg-white hover:shadow-md border`;
+
+  return (
+    <div
+      onClick={onClick}
+      className={`${baseStyle} ${isActive ? activeStyle : inactiveStyle}`}
+    >
+      <div>
+        <div
+          className={`text-2xl font-bold ${
+            isActive ? "text-white" : inactiveTextColor
+          }`}
+        >
+          {value}
+        </div>
+        <div
+          className={`text-xs font-medium ${
+            isActive ? "text-white opacity-90" : "text-gray-500"
+          }`}
+        >
+          {label}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ApplicationStatsHeader = ({
+  stats,
+  activeFilter,
+  onFilterChange,
+  onBack,
+}) => (
+  <div className="mb-6">
+    <div className="flex items-center gap-4 mb-4">
+      <button
+        onClick={onBack}
+        className="p-2 rounded-full bg-white border text-gray-600 hover:bg-gray-100 transition-colors"
+        aria-label="Go back to dashboard"
+      >
+        <ArrowLeftIcon />
+      </button>
+      <h1 className="text-2xl font-bold text-gray-800">
+        Applications Management
+      </h1>
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <StatPill
+        label="Total"
+        value={stats.total}
+        color="black"
+        isActive={activeFilter === "ALL"}
+        onClick={() => onFilterChange("ALL")}
+      />
+      <StatPill
+        label="New"
+        value={stats.applied}
+        color="blue"
+        isActive={activeFilter === "APPLIED"}
+        onClick={() => onFilterChange("APPLIED")}
+      />
+      <StatPill
+        label="Shortlisted"
+        value={stats.shortlisted}
+        color="yellow"
+        isActive={activeFilter === "SHORTLISTED"}
+        onClick={() => onFilterChange("SHORTLISTED")}
+      />
+      <StatPill
+        label="Interviews"
+        value={stats.interviews}
+        color="purple"
+        isActive={activeFilter === "INTERVIEW_SCHEDULED"}
+        onClick={() => onFilterChange("INTERVIEW_SCHEDULED")}
+      />
+      <StatPill
+        label="Hired"
+        value={stats.hired}
+        color="green"
+        isActive={activeFilter === "HIRED"}
+        onClick={() => onFilterChange("HIRED")}
+      />
+      <StatPill
+        label="Rejected"
+        value={stats.rejected}
+        color="red"
+        isActive={activeFilter === "REJECTED"}
+        onClick={() => onFilterChange("REJECTED")}
+      />
+    </div>
+  </div>
+);
+
+const ApplicationFilters = ({ jobs, selectedJob, onJobChange }) => (
+  <div className="mb-6 bg-white p-4 rounded-xl border">
+    <label
+      htmlFor="job-filter"
+      className="block text-sm font-medium text-gray-700 mb-2"
+    >
+      Filter by Job Posting
+    </label>
+    <select
+      id="job-filter"
+      value={selectedJob}
+      onChange={onJobChange}
+      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+      <option value="ALL">All Jobs</option>
+      {jobs.map((job) => (
+        <option key={job.id} value={job.id}>
+          {job.title || `Job #${job.id.slice(-6)}`} - {job.recruiter.name}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const ActionButtons = ({ application, onStatusUpdate }) => {
+  const actionsMap = {
+    APPLIED: [
+      {
+        label: "Shortlist",
+        status: "SHORTLISTED",
+        color: "bg-yellow-500 hover:bg-yellow-600",
+        icon: <CheckIcon />,
+      },
+      {
+        label: "Reject",
+        status: "REJECTED",
+        color: "bg-red-500 hover:bg-red-600",
+        icon: <XIcon />,
+      },
+    ],
+    SHORTLISTED: [
+      {
+        label: "Schedule Interview",
+        status: "INTERVIEW_SCHEDULED",
+        color: "bg-purple-500 hover:bg-purple-600",
+        icon: <CalendarIcon />,
+      },
+      {
+        label: "Reject",
+        status: "REJECTED",
+        color: "bg-red-500 hover:bg-red-600",
+        icon: <XIcon />,
+      },
+    ],
+    INTERVIEW_SCHEDULED: [
+      {
+        label: "Hire",
+        status: "HIRED",
+        color: "bg-green-500 hover:bg-green-600",
+        icon: <UserAddIcon />,
+      },
+      {
+        label: "Reject",
+        status: "REJECTED",
+        color: "bg-red-500 hover:bg-red-600",
+        icon: <XIcon />,
+      },
+    ],
+  };
+
+  const availableActions = actionsMap[application.applicationStatus] || [];
+
+  return (
+    <div className="flex gap-2 flex-wrap items-center mt-4 pt-4 border-t">
+      {availableActions.map((action) => (
+        <Button
+          key={action.status}
+          onClick={() => onStatusUpdate(application.id, action.status)}
+          className={action.color}
+        >
+          {action.icon} {action.label}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
+const ApplicationCard = ({ application, onStatusUpdate }) => {
+  const getStatusBadge = (status) => {
+    const styles = {
+      APPLIED: "bg-blue-100 text-blue-800 border-blue-200",
+      SHORTLISTED: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      INTERVIEW_SCHEDULED: "bg-purple-100 text-purple-800 border-purple-200",
+      HIRED: "bg-green-100 text-green-800 border-green-200",
+      REJECTED: "bg-red-100 text-red-800 border-red-200",
+    };
+    return (
+      <span
+        className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+          styles[status] || "bg-gray-100"
+        }`}
+      >
+        {status.replace("_", " ")}
+      </span>
+    );
+  };
+
+  const student = application.student;
+  const academics = student.academicRecords || {};
+
+  return (
+    <div className="bg-white border rounded-xl p-6 shadow-sm transition-shadow hover:shadow-lg">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">{student.name}</h3>
+          <p className="text-sm text-gray-500">{student.email}</p>
+        </div>
+        {getStatusBadge(application.applicationStatus)}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 className="font-semibold text-gray-700 text-sm mb-2">
+            Student Details
+          </h4>
+          <div className="text-sm text-gray-600 space-y-1">
+            {student.facultyNo && (
+              <p>
+                <strong>Faculty No:</strong> {student.facultyNo}
+              </p>
+            )}
+            {student.enrollmentNo && (
+              <p>
+                <strong>Enrollment No:</strong> {student.enrollmentNo}
+              </p>
+            )}
+          </div>
+        </div>
+        <div>
+          <h4 className="font-semibold text-gray-700 text-sm mb-2">
+            Academic Snapshot
+          </h4>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>
+              <strong>CGPA:</strong> {academics.currentCGPA || "N/A"}
+            </p>
+            <p>
+              <strong>Course:</strong> {academics.courseEnrolled || "N/A"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {academics.resumeLink && (
+        <div className="mt-4">
+          <a
+            href={academics.resumeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            <DownloadIcon /> View Full Resume
+          </a>
+        </div>
+      )}
+
+      <ActionButtons
+        application={application}
+        onStatusUpdate={onStatusUpdate}
+      />
+    </div>
+  );
+};
+
+const EmptyState = () => (
+  <div className="text-center py-16 bg-white rounded-xl border">
+    <svg
+      className="mx-auto h-12 w-12 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+      />
+    </svg>
+    <h3 className="mt-2 text-sm font-medium text-gray-900">
+      No Applications Found
+    </h3>
+    <p className="mt-1 text-sm text-gray-500">
+      No applications match the current filters.
+    </p>
+  </div>
+);
+
+// --- Main Parent Component ---
 
 export default function RecruiterApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -9,39 +420,29 @@ export default function RecruiterApplicationsPage() {
   const [filter, setFilter] = useState("ALL");
   const [selectedJob, setSelectedJob] = useState("ALL");
   const [jobs, setJobs] = useState([]);
+  const router = useRouter();
 
-  useEffect(() => {
-    fetchApplications();
-    fetchJobs();
-  }, []);
-
-  const fetchApplications = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch("/api/applications");
-      const result = await response.json();
+      const [appsResponse, jobsResponse] = await Promise.all([
+        fetch("/api/applications"),
+        fetch("/api/jobs?recruiterId=current"),
+      ]);
+      const appsResult = await appsResponse.json();
+      const jobsResult = await jobsResponse.json();
 
-      if (result.success) {
-        setApplications(result.applications);
-      }
+      if (appsResult.success) setApplications(appsResult.applications);
+      if (jobsResult.success) setJobs(jobsResult.jobs);
     } catch (error) {
-      console.error("Error fetching applications:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchJobs = async () => {
-    try {
-      const response = await fetch("/api/jobs?recruiterId=current");
-      const result = await response.json();
-
-      if (result.success) {
-        setJobs(result.jobs);
-      }
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    }
-  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const updateApplicationStatus = async (applicationId, newStatus) => {
     try {
@@ -55,134 +456,43 @@ export default function RecruiterApplicationsPage() {
       );
 
       const result = await response.json();
+      const toastDetail = result.success
+        ? result.message
+        : result.error?.message || "An error occurred";
+
+      window.dispatchEvent(new CustomEvent("toast", { detail: toastDetail }));
+
       if (result.success) {
-        window.dispatchEvent(
-          new CustomEvent("toast", { detail: result.message })
-        );
-        fetchApplications(); // Refresh the list
-      } else {
-        window.dispatchEvent(
-          new CustomEvent("toast", { detail: result.error.message })
+        // Optimistic UI update for faster feedback
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === applicationId
+              ? { ...app, applicationStatus: newStatus }
+              : app
+          )
         );
       }
     } catch (error) {
       console.error("Error updating application status:", error);
       window.dispatchEvent(
-        new CustomEvent("toast", {
-          detail: "Error updating application status",
-        })
+        new CustomEvent("toast", { detail: "Failed to update status" })
       );
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusStyles = {
-      APPLIED: "bg-blue-100 text-blue-800",
-      SHORTLISTED: "bg-yellow-100 text-yellow-800",
-      INTERVIEW_SCHEDULED: "bg-purple-100 text-purple-800",
-      HIRED: "bg-green-100 text-green-800",
-      REJECTED: "bg-red-100 text-red-800",
-    };
+  const filteredApplications = useMemo(
+    () =>
+      applications.filter((app) => {
+        const statusMatch =
+          filter === "ALL" || app.applicationStatus === filter;
+        const jobMatch = selectedJob === "ALL" || app.jobId === selectedJob;
+        return statusMatch && jobMatch;
+      }),
+    [applications, filter, selectedJob]
+  );
 
-    const statusLabels = {
-      APPLIED: "Applied",
-      SHORTLISTED: "Shortlisted",
-      INTERVIEW_SCHEDULED: "Interview Scheduled",
-      HIRED: "Hired",
-      REJECTED: "Rejected",
-    };
-
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          statusStyles[status] || "bg-gray-100 text-gray-800"
-        }`}
-      >
-        {statusLabels[status] || status}
-      </span>
-    );
-  };
-
-  const getStatusActions = (application) => {
-    const currentStatus = application.applicationStatus;
-    const actions = [];
-
-    if (currentStatus === "APPLIED") {
-      actions.push(
-        <Button
-          key="shortlist"
-          onClick={() => updateApplicationStatus(application.id, "SHORTLISTED")}
-          className="bg-yellow-600 hover:bg-yellow-700 text-xs px-3 py-1"
-        >
-          Shortlist
-        </Button>
-      );
-      actions.push(
-        <Button
-          key="reject"
-          onClick={() => updateApplicationStatus(application.id, "REJECTED")}
-          className="bg-red-600 hover:bg-red-700 text-xs px-3 py-1"
-        >
-          Reject
-        </Button>
-      );
-    }
-
-    if (currentStatus === "SHORTLISTED") {
-      actions.push(
-        <Button
-          key="interview"
-          onClick={() =>
-            updateApplicationStatus(application.id, "INTERVIEW_SCHEDULED")
-          }
-          className="bg-purple-600 hover:bg-purple-700 text-xs px-3 py-1"
-        >
-          Schedule Interview
-        </Button>
-      );
-      actions.push(
-        <Button
-          key="reject"
-          onClick={() => updateApplicationStatus(application.id, "REJECTED")}
-          className="bg-red-600 hover:bg-red-700 text-xs px-3 py-1"
-        >
-          Reject
-        </Button>
-      );
-    }
-
-    if (currentStatus === "INTERVIEW_SCHEDULED") {
-      actions.push(
-        <Button
-          key="hire"
-          onClick={() => updateApplicationStatus(application.id, "HIRED")}
-          className="bg-green-600 hover:bg-green-700 text-xs px-3 py-1"
-        >
-          Hire
-        </Button>
-      );
-      actions.push(
-        <Button
-          key="reject"
-          onClick={() => updateApplicationStatus(application.id, "REJECTED")}
-          className="bg-red-600 hover:bg-red-700 text-xs px-3 py-1"
-        >
-          Reject
-        </Button>
-      );
-    }
-
-    return actions;
-  };
-
-  const filteredApplications = applications.filter((app) => {
-    if (filter !== "ALL" && app.applicationStatus !== filter) return false;
-    if (selectedJob !== "ALL" && app.jobId !== selectedJob) return false;
-    return true;
-  });
-
-  const getApplicationStats = () => {
-    const stats = {
+  const applicationStats = useMemo(
+    () => ({
       total: applications.length,
       applied: applications.filter((app) => app.applicationStatus === "APPLIED")
         .length,
@@ -197,221 +507,47 @@ export default function RecruiterApplicationsPage() {
       rejected: applications.filter(
         (app) => app.applicationStatus === "REJECTED"
       ).length,
-    };
-    return stats;
-  };
+    }),
+    [applications]
+  );
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-black font-semibold mb-6">
-          Applications Management
-        </h1>
-        <div className="text-center">Loading...</div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+          <p className="mt-4 text-lg font-semibold text-gray-700">
+            Loading Applications...
+          </p>
+        </div>
       </div>
     );
   }
 
-  const stats = getApplicationStats();
-
   return (
-    <div className="p-6">
-      <h1 className="text-black font-semibold mb-6">Applications Management</h1>
+    <div className="p-6 md:p-8 bg-gray-50 min-h-screen">
+      <ApplicationStatsHeader
+        stats={applicationStats}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+        onBack={() => router.push("/recruiter")}
+      />
+      <ApplicationFilters
+        jobs={jobs}
+        selectedJob={selectedJob}
+        onJobChange={(e) => setSelectedJob(e.target.value)}
+      />
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-        <div className="bg-white border rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-neutral-800">
-            {stats.total}
-          </div>
-          <div className="text-xs text-neutral-600">Total</div>
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-blue-800">
-            {stats.applied}
-          </div>
-          <div className="text-xs text-blue-600">New</div>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-yellow-800">
-            {stats.shortlisted}
-          </div>
-          <div className="text-xs text-yellow-600">Shortlisted</div>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-purple-800">
-            {stats.interviews}
-          </div>
-          <div className="text-xs text-purple-600">Interviews</div>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-green-800">{stats.hired}</div>
-          <div className="text-xs text-green-600">Hired</div>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-red-800">
-            {stats.rejected}
-          </div>
-          <div className="text-xs text-red-600">Rejected</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        {/* Status Filter */}
-        <div className="flex gap-2 overflow-x-auto">
-          {[
-            "ALL",
-            "APPLIED",
-            "SHORTLISTED",
-            "INTERVIEW_SCHEDULED",
-            "HIRED",
-            "REJECTED",
-          ].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap ${
-                filter === status
-                  ? "bg-blue-600 text-white"
-                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-              }`}
-            >
-              {status === "ALL" ? "All" : status.replace("_", " ")}
-            </button>
-          ))}
-        </div>
-
-        {/* Job Filter */}
-        <select
-          value={selectedJob}
-          onChange={(e) => setSelectedJob(e.target.value)}
-          className="border rounded-md px-3 py-2 text-sm"
-        >
-          <option value="ALL">All Jobs</option>
-          {jobs.map((job) => (
-            <option key={job.id} value={job.id}>
-              Job #{job.id.slice(-8)} - {job.recruiter.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Applications List */}
       {filteredApplications.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-neutral-500 mb-4">No applications found</p>
-        </div>
+        <EmptyState />
       ) : (
         <div className="space-y-4">
           {filteredApplications.map((application) => (
-            <div key={application.id} className="border rounded-lg p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-black font-medium">
-                      {application.student.name}
-                    </h3>
-                    {getStatusBadge(application.applicationStatus)}
-                  </div>
-                  <div className="text-sm text-neutral-600 space-y-1">
-                    <p>
-                      <strong>Email:</strong> {application.student.email}
-                    </p>
-                    {application.student.facultyNo && (
-                      <p>
-                        <strong>Faculty No:</strong>{" "}
-                        {application.student.facultyNo}
-                      </p>
-                    )}
-                    {application.student.enrollmentNo && (
-                      <p>
-                        <strong>Enrollment No:</strong>{" "}
-                        {application.student.enrollmentNo}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Academic Records */}
-              {application.student.academicRecords && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm mb-2">
-                    Academic Records:
-                  </h4>
-                  <div className="bg-neutral-50 dark:bg-gray-700 rounded-md p-3 space-y-2 text-sm">
-                    {application.student.academicRecords.classXPercentage && (
-                      <div>
-                        <strong>Class X:</strong>{" "}
-                        {application.student.academicRecords.classXPercentage}%
-                      </div>
-                    )}
-                    {application.student.academicRecords.classXIIPercentage && (
-                      <div>
-                        <strong>Class XII:</strong>{" "}
-                        {application.student.academicRecords.classXIIPercentage}
-                        %
-                      </div>
-                    )}
-                    {application.student.academicRecords.courseEnrolled && (
-                      <div>
-                        <strong>Course:</strong>{" "}
-                        {application.student.academicRecords.courseEnrolled}
-                      </div>
-                    )}
-                    {application.student.academicRecords.college && (
-                      <div>
-                        <strong>College:</strong>{" "}
-                        {application.student.academicRecords.college}
-                      </div>
-                    )}
-                    {application.student.academicRecords.currentCGPA && (
-                      <div>
-                        <strong>Current CGPA:</strong>{" "}
-                        {application.student.academicRecords.currentCGPA}
-                      </div>
-                    )}
-                    {application.student.academicRecords
-                      .currentYearSemester && (
-                      <div>
-                        <strong>Year/Semester:</strong>{" "}
-                        {
-                          application.student.academicRecords
-                            .currentYearSemester
-                        }
-                      </div>
-                    )}
-                    {application.student.academicRecords.resumeLink && (
-                      <div>
-                        <strong>Resume:</strong>
-                        <a
-                          href={application.student.academicRecords.resumeLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 ml-2 underline"
-                        >
-                          View Resume
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Job Information */}
-              <div className="mb-4 bg-blue-50 rounded-md p-3">
-                <h4 className="font-medium text-black mb-1">Applied for:</h4>
-                <p className="text-sm text-blue-800">
-                  Job #{application.job.id.slice(-8)}
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 flex-wrap">
-                {getStatusActions(application)}
-              </div>
-            </div>
+            <ApplicationCard
+              key={application.id}
+              application={application}
+              onStatusUpdate={updateApplicationStatus}
+            />
           ))}
         </div>
       )}

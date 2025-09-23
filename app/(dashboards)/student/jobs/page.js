@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { SearchIcon, BriefcaseIcon } from "@/components/ui/Icons"; // Assuming you have an Icons component
 
 export default function StudentJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -17,14 +18,15 @@ export default function StudentJobsPage() {
   }, []);
 
   useEffect(() => {
-    // Filter jobs based on search term
     if (searchTerm.trim() === "") {
       setFilteredJobs(jobs);
     } else {
-      const filtered = jobs.filter(job =>
-        job.jobDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.eligibilityCriteria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.recruiter.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const lowercasedFilter = searchTerm.toLowerCase();
+      const filtered = jobs.filter(
+        (job) =>
+          job.jobDescription.toLowerCase().includes(lowercasedFilter) ||
+          job.eligibilityCriteria.toLowerCase().includes(lowercasedFilter) ||
+          job.recruiter.name.toLowerCase().includes(lowercasedFilter)
       );
       setFilteredJobs(filtered);
     }
@@ -32,15 +34,12 @@ export default function StudentJobsPage() {
 
   const fetchJobs = async () => {
     try {
-      // Only fetch approved jobs for students
       const response = await fetch("/api/jobs?status=APPROVED");
       const result = await response.json();
-      
+
       if (result.success) {
-        // Filter out expired jobs
-        const currentDate = new Date();
-        const activeJobs = result.jobs.filter(job => 
-          new Date(job.applicationDeadline) > currentDate
+        const activeJobs = result.jobs.filter(
+          (job) => new Date(job.applicationDeadline) > new Date()
         );
         setJobs(activeJobs);
       }
@@ -51,120 +50,119 @@ export default function StudentJobsPage() {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
+      year: "numeric",
     });
-  };
-
-  const getDaysUntilDeadline = (deadline) => {
-    const now = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
 
   const getDeadlineStatus = (deadline) => {
-    const days = getDaysUntilDeadline(deadline);
-    if (days <= 1) return { text: "Expires today", color: "text-red-600" };
-    if (days <= 3) return { text: `${days} days left`, color: "text-orange-600" };
-    if (days <= 7) return { text: `${days} days left`, color: "text-yellow-600" };
-    return { text: `${days} days left`, color: "text-green-600" };
+    const diffDays = Math.ceil(
+      (new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    if (diffDays <= 1) return { text: "Closes today", color: "text-red-600" };
+    if (diffDays <= 3)
+      return { text: `${diffDays} days left`, color: "text-orange-500" };
+    return { text: `${diffDays} days left`, color: "text-green-600" };
   };
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">Available Jobs</h1>
-        <div className="text-center">Loading...</div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <BriefcaseIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <h2 className="mt-2 text-lg font-medium text-gray-900">
+            Loading Jobs...
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Finding opportunities for you.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Available Jobs</h1>
-        <div className="text-sm text-neutral-600">
-          {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} available
+    <div className="p-6 md:p-8">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Available Jobs</h1>
+          <p className="text-gray-600 mt-1">
+            {filteredJobs.length} opportunities waiting for you.
+          </p>
         </div>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="mb-6">
-        <div className="max-w-md">
+        <div className="relative w-full md:w-80">
           <Input
             type="text"
-            placeholder="Search jobs by description, criteria, or company..."
+            placeholder="Search by company, role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
+            className="w-full pl-10"
           />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
       </div>
 
       {filteredJobs.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-neutral-500 mb-2">
-            {searchTerm ? "No jobs match your search criteria" : "No jobs available at the moment"}
+        <div className="text-center py-16">
+          <BriefcaseIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <h2 className="mt-4 text-lg font-medium text-gray-900">
+            {searchTerm
+              ? "No jobs match your search"
+              : "No jobs available right now"}
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchTerm
+              ? "Try a different keyword."
+              : "Please check back later."}
           </p>
           {searchTerm && (
             <Button
               onClick={() => setSearchTerm("")}
-              className="bg-neutral-500 hover:bg-neutral-600"
+              className="mt-4 bg-gray-700 hover:bg-gray-800"
             >
               Clear Search
             </Button>
           )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredJobs.map((job) => {
             const deadlineStatus = getDeadlineStatus(job.applicationDeadline);
-            
             return (
-              <div key={job.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-2">{job.recruiter.name}</h3>
-                    <div className="flex items-center gap-4 text-sm text-neutral-600">
-                      <span>
-                        <strong>Deadline:</strong> {formatDate(job.applicationDeadline)}
-                      </span>
-                      <span className={`font-medium ${deadlineStatus.color}`}>
-                        {deadlineStatus.text}
-                      </span>
-                    </div>
+              <div
+                key={job.id}
+                className="bg-white border rounded-2xl p-6 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="flex-grow">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {job.recruiter.name}
+                    </h3>
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${deadlineStatus.color
+                        .replace("text-", "bg-")
+                        .replace("-600", "-100")} ${deadlineStatus.color}`}
+                    >
+                      {deadlineStatus.text}
+                    </span>
                   </div>
-                </div>
-
-                <div className="space-y-3 mb-4">
                   <div>
-                    <h4 className="font-medium text-sm mb-1">Job Description:</h4>
-                    <p className="text-sm text-neutral-700 line-clamp-3">
+                    <h4 className="font-semibold text-gray-800 text-sm mb-1">
+                      Description
+                    </h4>
+                    <p className="text-sm text-gray-600 line-clamp-3">
                       {job.jobDescription}
                     </p>
                   </div>
-
-                  <div>
-                    <h4 className="font-medium text-sm mb-1">Eligibility Criteria:</h4>
-                    <p className="text-sm text-neutral-700 line-clamp-2">
-                      {job.eligibilityCriteria}
-                    </p>
-                  </div>
                 </div>
-
-                <div className="flex gap-2">
+                <div className="mt-6">
                   <Button
                     onClick={() => router.push(`/student/jobs/${job.id}`)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                   >
-                    View Details & Apply
+                    View & Apply
                   </Button>
                 </div>
               </div>
