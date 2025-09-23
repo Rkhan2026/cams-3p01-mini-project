@@ -127,8 +127,8 @@ const TpoApprovalNote = () => (
         <h3 className="text-sm font-medium text-blue-800">For TPO Approval</h3>
         <div className="mt-2 text-sm text-blue-700">
           <p>
-            Your job posting will be submitted for approval before it becomes
-            visible to students. You'll be notified of the decision.
+            {`Your job posting will be submitted for approval before it becomes
+  visible to students. You'll be notified of the decision.`}
           </p>
         </div>
       </div>

@@ -344,13 +344,16 @@ export default function JobDetailsPage() {
               Application Process
             </h4>
             <ul className="text-sm text-blue-800 space-y-2 list-disc list-inside">
-              <li>Click "Apply for this Job" to submit your application.</li>
+              <li>
+                Click &quot;Apply for this Job&quot; to submit your application.
+              </li>
               <li>
                 Your profile and academic records will be shared with the
                 recruiter.
               </li>
               <li>
-                You can track your status in the "My Applications" section.
+                You can track your status in the &quot;My Applications&quot;
+                section.
               </li>
               <li>
                 You will receive email notifications about any status updates.
