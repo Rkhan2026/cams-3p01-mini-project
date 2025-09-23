@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-// --- Reusable UI Components (can be moved to separate files) ---
+// --- Reusable UI Components ---
 
 const Button = ({ onClick, className, children, ...props }) => (
   <button
@@ -266,7 +266,7 @@ const ApprovalsPageSkeleton = () => (
   </div>
 );
 
-// --- Main Parent Component ---
+// --- Main Component ---
 
 export default function ApprovalsPage() {
   const [pendingUsers, setPendingUsers] = useState({
@@ -285,25 +285,6 @@ export default function ApprovalsPage() {
   const [activeFilter, setActiveFilter] = useState("PENDING");
   const router = useRouter();
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchPendingUsers(),
-        fetchApprovedUsers(),
-        fetchRejectedUsers(),
-      ]);
-    } catch (error) {
-      console.error("Error fetching all user data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
   const fetchPendingUsers = async () => {
     const response = await fetch("/api/auth/pending");
     const result = await response.json();
@@ -316,12 +297,30 @@ export default function ApprovalsPage() {
     if (result.success) setApprovedUsers(result.data);
   };
 
-  // NOTE: You will need to create this API endpoint to fetch rejected users
   const fetchRejectedUsers = async () => {
     const response = await fetch("/api/auth/rejected");
     const result = await response.json();
     if (result.success) setRejectedUsers(result.data);
   };
+
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchPendingUsers(),
+        fetchApprovedUsers(),
+        fetchRejectedUsers(),
+      ]);
+    } catch (error) {
+      console.error("Error fetching all user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleApproval = async (userId, userType, approved) => {
     try {
@@ -333,12 +332,10 @@ export default function ApprovalsPage() {
       const result = await response.json();
       window.dispatchEvent(
         new CustomEvent("toast", {
-          detail: result.message || `Action completed.`,
+          detail: result.message || "Action completed.",
         })
       );
-      if (result.success) {
-        fetchAllData(); // Refresh all lists
-      }
+      if (result.success) fetchAllData();
     } catch (error) {
       console.error("Error processing approval:", error);
     }
@@ -356,15 +353,10 @@ export default function ApprovalsPage() {
     else if (activeFilter === "APPROVED") usersToDisplay = approvedUsers;
     else if (activeFilter === "REJECTED") usersToDisplay = rejectedUsers;
 
-    return {
-      filteredUsers: usersToDisplay,
-      counts: newCounts,
-    };
+    return { filteredUsers: usersToDisplay, counts: newCounts };
   }, [pendingUsers, approvedUsers, rejectedUsers, activeFilter]);
 
-  if (loading) {
-    return <ApprovalsPageSkeleton />;
-  }
+  if (loading) return <ApprovalsPageSkeleton />;
 
   return (
     <div className="p-6 md:p-8 bg-gray-50 min-h-screen">

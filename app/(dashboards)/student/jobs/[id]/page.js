@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-// --- Reusable UI Components (can be moved to separate files) ---
-
+// --- Reusable UI Components ---
 const Button = ({ onClick, className, children, ...props }) => (
   <button
     onClick={onClick}
@@ -15,8 +14,7 @@ const Button = ({ onClick, className, children, ...props }) => (
   </button>
 );
 
-// --- SVG Icon Components ---
-
+// --- SVG Components ---
 const ArrowLeftIcon = () => (
   <svg
     className="w-5 h-5"
@@ -82,7 +80,6 @@ const XCircleIcon = () => (
 );
 
 // --- Child Components ---
-
 const PageHeader = ({ onBack }) => (
   <div className="mb-6">
     <button
@@ -159,8 +156,7 @@ const JobDetailsSkeleton = () => (
   </div>
 );
 
-// --- Main Parent Component ---
-
+// --- Main Component ---
 export default function JobDetailsPage() {
   const params = useParams();
   const jobId = params.id;
@@ -171,14 +167,8 @@ export default function JobDetailsPage() {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
-  useEffect(() => {
-    if (jobId) {
-      fetchJobDetails();
-      checkApplicationStatus();
-    }
-  }, [jobId]);
-
-  const fetchJobDetails = async () => {
+  // --- useCallback functions ---
+  const fetchJobDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/jobs?status=APPROVED`);
       const result = await response.json();
@@ -192,9 +182,9 @@ export default function JobDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, router]);
 
-  const checkApplicationStatus = async () => {
+  const checkApplicationStatus = useCallback(async () => {
     try {
       const response = await fetch("/api/applications");
       const result = await response.json();
@@ -205,7 +195,15 @@ export default function JobDetailsPage() {
     } catch (error) {
       console.error("Error checking application status:", error);
     }
-  };
+  }, [jobId]);
+
+  // --- useEffect ---
+  useEffect(() => {
+    if (jobId) {
+      fetchJobDetails();
+      checkApplicationStatus();
+    }
+  }, [jobId, fetchJobDetails, checkApplicationStatus]);
 
   const handleApply = async () => {
     setApplying(true);
@@ -218,7 +216,7 @@ export default function JobDetailsPage() {
       const result = await response.json();
       window.dispatchEvent(
         new CustomEvent("toast", {
-          detail: result.message || result.error.message,
+          detail: result.message || result.error?.message,
         })
       );
       if (result.success) setHasApplied(true);
@@ -246,9 +244,7 @@ export default function JobDetailsPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  if (loading) {
-    return <JobDetailsSkeleton />;
-  }
+  if (loading) return <JobDetailsSkeleton />;
 
   if (!job) {
     return (
