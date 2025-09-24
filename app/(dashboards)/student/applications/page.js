@@ -4,21 +4,45 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 // --- Helper Components ---
-// These components are defined within the same file for simplicity.
 
-/**
- * A loading spinner component.
- */
+// New ArrowLeftIcon for the header
+const ArrowLeftIcon = (props) => (
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+    />
+  </svg>
+);
+
+// The new header component you requested
+const PageHeader = ({ title, subtitle, onBack }) => (
+  <div>
+    <button
+      onClick={onBack}
+      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all mb-4"
+    >
+      <ArrowLeftIcon className="h-5 w-5" />
+      Back to Dashboard
+    </button>
+    <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
+    <p className="text-gray-500 mt-1">{subtitle}</p>
+  </div>
+);
+
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-64">
     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
   </div>
 );
 
-/**
- * A card to display a single statistic.
- * @param {{icon: JSX.Element, label: string, value: number, color: string}} props
- */
 const StatisticCard = ({ icon, label, value, color }) => (
   <div
     className={`bg-white border-l-4 ${color} rounded-lg p-4 shadow-sm flex items-center space-x-4`}
@@ -31,10 +55,6 @@ const StatisticCard = ({ icon, label, value, color }) => (
   </div>
 );
 
-/**
- * A tab for filtering applications by status.
- * @param {{label: string, count: number, isActive: boolean, onClick: function}} props
- */
 const FilterTab = ({ label, count, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -55,10 +75,6 @@ const FilterTab = ({ label, count, isActive, onClick }) => (
   </button>
 );
 
-/**
- * Displays an empty state message when no applications are found.
- * @param {{filter: string, onBrowseJobs: function}} props
- */
 const EmptyState = ({ filter, onBrowseJobs }) => (
   <div className="text-center py-16 px-6 bg-gray-50 rounded-lg border-2 border-dashed">
     <div className="mx-auto h-12 w-12 text-gray-400">
@@ -102,11 +118,8 @@ const EmptyState = ({ filter, onBrowseJobs }) => (
   </div>
 );
 
-/**
- * A card representing a single job application.
- * @param {{application: object, onViewDetails: function, onWithdraw: function}} props
- */
 const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
+  // ... ApplicationCard logic remains the same
   const { job, applicationStatus, appliedAt } = application;
 
   const statusConfig = useMemo(
@@ -170,7 +183,7 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
 
   return (
     <div className="bg-white border rounded-xl p-6 hover:shadow-lg transition-shadow duration-300">
-      {/* Card Header */}
+      {/* ... ApplicationCard JSX remains the same */}
       <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -190,8 +203,6 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
           Deadline: {formatDate(job.applicationDeadline)}
         </div>
       </div>
-
-      {/* Company Info */}
       <div className="border-t border-gray-100 pt-4 mb-4">
         <h4 className="font-semibold text-sm mb-2 text-gray-800">
           Company & Recruiter
@@ -206,8 +217,6 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
           </p>
         </div>
       </div>
-
-      {/* Job Description */}
       <div className="mb-4">
         <h4 className="font-semibold text-sm mb-2 text-gray-800">
           Job Description
@@ -216,8 +225,6 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
           {job.jobDescription}
         </p>
       </div>
-
-      {/* Status-specific information */}
       {currentStatus.infoText && (
         <div
           className={`mt-4 rounded-lg p-3 text-sm border ${currentStatus.infoClasses}`}
@@ -225,8 +232,6 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }) => {
           <p>{currentStatus.infoText}</p>
         </div>
       )}
-
-      {/* Actions */}
       <div className="flex gap-3 mt-6 border-t border-gray-100 pt-4">
         <button
           onClick={onViewDetails}
@@ -253,55 +258,35 @@ export default function StudentApplicationsPage() {
   const [filter, setFilter] = useState("ALL");
   const router = useRouter();
 
+  // ... All functions (fetchApplications, handleWithdrawApplication) remain the same
   const fetchApplications = async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/applications");
       const result = await response.json();
-
       if (result.success) {
         setApplications(result.applications || []);
       } else {
-        // Handle API error case if needed
         console.error("API call was not successful:", result.error);
         setApplications([]);
       }
     } catch (error) {
       console.error("Error fetching applications:", error);
-      setApplications([]); // Clear applications on error
+      setApplications([]);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchApplications();
   }, []);
-
   const handleWithdrawApplication = async (applicationId) => {
-    // Here you would typically make an API call to withdraw the application
     console.log(`Withdrawing application ${applicationId}`);
-
-    // Optimistically update the UI by removing the application
     setApplications((prev) => prev.filter((app) => app.id !== applicationId));
-
-    // Example API call:
-    // try {
-    //   const response = await fetch(`/api/applications/${applicationId}/withdraw`, { method: 'POST' });
-    //   const result = await response.json();
-    //   if (result.success) {
-    //     // Optionally show a success notification
-    //   } else {
-    //     // Revert the optimistic update if the API call fails
-    //     fetchApplications();
-    //   }
-    // } catch (error) {
-    //   console.error("Failed to withdraw application:", error);
-    //   fetchApplications(); // Revert on error
-    // }
   };
 
   const applicationStats = useMemo(() => {
+    // ... applicationStats logic remains the same
     return applications.reduce(
       (stats, app) => {
         stats[app.applicationStatus] = (stats[app.applicationStatus] || 0) + 1;
@@ -320,6 +305,7 @@ export default function StudentApplicationsPage() {
   }, [applications]);
 
   const filteredApplications = useMemo(() => {
+    // ... filteredApplications logic remains the same
     if (filter === "ALL") return applications;
     return applications.filter((app) => app.applicationStatus === filter);
   }, [applications, filter]);
@@ -336,58 +322,35 @@ export default function StudentApplicationsPage() {
   return (
     <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 mb-4 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5"></path>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          Go Back
-        </button>
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              My Applications
-            </h1>
-            <p className="mt-1 text-md text-gray-600">
-              Track your job applications and manage your next steps.
-            </p>
-          </div>
-          <button
-            onClick={() => router.push("/student/jobs")}
-            className="mt-4 sm:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        {/* --- MODIFIED HEADER SECTION --- */}
+        <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-8">
+          <PageHeader
+            title="My Applications"
+            subtitle="Track your job applications and manage your next steps."
+            onBack={() => router.push("/student")}
+          />
+          <div className="mt-4 sm:mt-8 flex-shrink-0">
+            <button
+              onClick={() => router.push("/student/jobs")}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
             >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Browse & Apply
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Browse & Apply
+            </button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -447,7 +410,7 @@ export default function StudentApplicationsPage() {
           ))}
         </div>
 
-        {/* Main Content: Applications List or Empty/Loading State */}
+        {/* Main Content */}
         <main>
           {loading ? (
             <LoadingSpinner />

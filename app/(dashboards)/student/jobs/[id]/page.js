@@ -15,18 +15,18 @@ const Button = ({ onClick, className, children, ...props }) => (
 );
 
 // --- SVG Components ---
-const ArrowLeftIcon = () => (
+const ArrowLeftIcon = (props) => (
   <svg
-    className="w-5 h-5"
+    {...props}
     fill="none"
-    stroke="currentColor"
     viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
   >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
     />
   </svg>
 );
@@ -80,15 +80,19 @@ const XCircleIcon = () => (
 );
 
 // --- Child Components ---
-const PageHeader = ({ onBack }) => (
-  <div className="mb-6">
+
+// New header component with your preferred style
+const PageHeader = ({ title, subtitle, onBack, buttonText }) => (
+  <div className="mb-8">
     <button
       onClick={onBack}
-      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all mb-4"
     >
-      <ArrowLeftIcon />
-      Back to Jobs
+      <ArrowLeftIcon className="h-5 w-5" />
+      {buttonText}
     </button>
+    <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
+    <p className="text-lg text-gray-600 mt-1">{subtitle}</p>
   </div>
 );
 
@@ -104,6 +108,7 @@ const InfoBlock = ({ title, children }) => (
 );
 
 const ApplicationStatus = ({ hasApplied, deadlinePassed }) => {
+  // ... Unchanged
   if (hasApplied) {
     return (
       <div className="bg-green-50 border-l-4 border-green-500 rounded-r-lg p-4 flex items-center">
@@ -134,6 +139,7 @@ const ApplicationStatus = ({ hasApplied, deadlinePassed }) => {
 };
 
 const JobDetailsSkeleton = () => (
+  // ... Unchanged
   <div className="p-6 md:p-8 bg-gray-50 min-h-screen animate-pulse">
     <div className="max-w-4xl mx-auto">
       <div className="h-8 w-40 bg-gray-300 rounded-lg mb-8"></div>
@@ -167,7 +173,7 @@ export default function JobDetailsPage() {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
-  // --- useCallback functions ---
+  // --- Logic and Functions (Unchanged) ---
   const fetchJobDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/jobs?status=APPROVED`);
@@ -183,7 +189,6 @@ export default function JobDetailsPage() {
       setLoading(false);
     }
   }, [jobId, router]);
-
   const checkApplicationStatus = useCallback(async () => {
     try {
       const response = await fetch("/api/applications");
@@ -196,15 +201,12 @@ export default function JobDetailsPage() {
       console.error("Error checking application status:", error);
     }
   }, [jobId]);
-
-  // --- useEffect ---
   useEffect(() => {
     if (jobId) {
       fetchJobDetails();
       checkApplicationStatus();
     }
   }, [jobId, fetchJobDetails, checkApplicationStatus]);
-
   const handleApply = async () => {
     setApplying(true);
     try {
@@ -229,7 +231,6 @@ export default function JobDetailsPage() {
       setApplying(false);
     }
   };
-
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -238,7 +239,6 @@ export default function JobDetailsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
-
   const getDaysUntilDeadline = (deadline) => {
     const diffTime = new Date(deadline) - new Date();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -254,7 +254,7 @@ export default function JobDetailsPage() {
           onClick={() => router.push("/student/jobs")}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Back to Jobs
+          Back to Applications
         </Button>
       </div>
     );
@@ -266,15 +266,16 @@ export default function JobDetailsPage() {
   return (
     <div className="p-6 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <PageHeader onBack={() => router.back()} />
+        {/* --- MODIFIED HEADER --- */}
+        <PageHeader
+          title={job.title || `Opportunity at ${job.recruiter.name}`}
+          subtitle={job.recruiter.name}
+          onBack={() => router.push("/student/jobs")}
+          buttonText="Back to Jobs"
+        />
 
         <div className="bg-white rounded-xl shadow-sm p-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {job.title || `Opportunity at ${job.recruiter.name}`}
-            </h1>
-            <p className="text-lg text-gray-600 mt-1">{job.recruiter.name}</p>
-          </div>
+          {/* The old h1/p title block is removed from here */}
 
           <div className="border-t border-b border-gray-200 py-4 mb-8">
             <div className="flex items-center text-base">

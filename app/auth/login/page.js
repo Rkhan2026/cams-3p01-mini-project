@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // <-- Import useRouter
+// import { useRouter } from "next/navigation"; // <-- REMOVED: No longer needed for this logic
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
-import Logo from "@/components/Logo";
 import Link from "next/link";
 
 // Simple Eye icon component for the password toggle
@@ -33,13 +32,12 @@ const EyeIcon = ({ ...props }) => (
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // <-- State for inline error messages
-  const [showPassword, setShowPassword] = useState(false); // <-- State for password visibility
-  const router = useRouter(); // <-- Initialize the router
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(formData) {
-    setLoading(true);
-    setError(""); // <-- Clear previous errors
+    setLoading(true); // <-- This now has a chance to render
+    setError("");
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -54,22 +52,30 @@ export default function LoginPage() {
       const result = await res.json();
 
       if (result.success) {
-        // Use router for smooth navigation
-        const role = result.user.role;
-        if (role === "STUDENT") router.push("/student");
-        else if (role === "RECRUITER") router.push("/recruiter");
-        else router.push("/tpo");
+        // --- MODIFIED SECTION ---
+        // We use a short timeout to ensure the browser has time to render
+        // the spinner state BEFORE navigating away.
+        setTimeout(() => {
+          const role = result.user.role;
+          if (role === "STUDENT") window.location.href = "/student";
+          else if (role === "RECRUITER") window.location.href = "/recruiter";
+          else window.location.href = "/tpo";
+        }, 500); // A 500ms delay ensures the spinner is visible
+        // --- END MODIFIED SECTION ---
+
+        // Note: We don't call setLoading(false) here because the page will navigate away.
+        return; // Exit the function early
       } else {
-        // Set the inline error message
         setError(
           result.error.message || "Invalid credentials. Please try again."
         );
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
     }
+
+    // This part will only be reached if there is an error
+    setLoading(false);
   }
 
   return (
@@ -88,12 +94,10 @@ export default function LoginPage() {
         >
           <div className="space-y-2">
             <Label htmlFor="email" className="font-medium text-gray-700">
-              {" "}
-              {/* <-- Use htmlFor */}
               Email Address
             </Label>
             <Input
-              id="email" // <-- Add matching id
+              id="email"
               name="email"
               type="email"
               placeholder="you@example.com"
@@ -108,7 +112,7 @@ export default function LoginPage() {
                 Password
               </Label>
               <Link
-                href="/auth/forgot-password" // <-- Forgot Password link
+                href="/auth/forgot-password"
                 className="text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 Forgot Password?
@@ -116,9 +120,9 @@ export default function LoginPage() {
             </div>
             <div className="relative">
               <Input
-                id="password" // <-- Add matching id
+                id="password"
                 name="password"
-                type={showPassword ? "text" : "password"} // <-- Toggle type
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-black transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                 required
@@ -133,7 +137,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Display Inline Error Message */}
           {error && (
             <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-center text-sm font-medium text-red-600">
               {error}

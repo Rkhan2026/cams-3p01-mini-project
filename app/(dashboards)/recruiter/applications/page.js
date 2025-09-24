@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 // --- Reusable UI & Icon Components (can be moved to separate files) ---
@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 const Button = ({ onClick, className, children, ...props }) => (
   <button
     onClick={onClick}
-    className={`px-3 py-1.5 rounded-md text-xs font-semibold text-white transition-transform duration-200 hover:scale-105 ${className}`}
+    className={`inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-semibold text-white transition-transform duration-200 hover:scale-105 ${className}`}
     {...props}
   >
     {children}
@@ -77,7 +77,7 @@ const UserAddIcon = () => (
 );
 const DownloadIcon = () => (
   <svg
-    className="w-4 h-4"
+    className="w-4 h-4 mr-1.5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -111,16 +111,12 @@ const ArrowLeftIcon = () => (
 const StatPill = ({ label, value, color, isActive, onClick }) => {
   const baseStyle =
     "flex items-center justify-center text-center p-4 rounded-xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1";
-
-  // Handle 'black' color directly, as it doesn't use shades like other colors.
   const activeStyle =
     color === "black"
       ? `bg-black text-white shadow-lg`
       : `bg-${color}-600 text-white shadow-lg`;
-
   const inactiveTextColor =
     color === "black" ? "text-black" : `text-${color}-600`;
-
   const inactiveStyle = `bg-white hover:shadow-md border`;
 
   return (
@@ -152,20 +148,20 @@ const ApplicationStatsHeader = ({
   stats,
   activeFilter,
   onFilterChange,
-  onBack,
+  onDownloadReport,
 }) => (
   <div className="mb-6">
-    <div className="flex items-center gap-4 mb-4">
-      <button
-        onClick={onBack}
-        className="p-2 rounded-full bg-white border text-gray-600 hover:bg-gray-100 transition-colors"
-        aria-label="Go back to dashboard"
-      >
-        <ArrowLeftIcon />
-      </button>
+    <div className="flex justify-between items-center mb-4">
       <h1 className="text-2xl font-bold text-gray-800">
         Applications Management
       </h1>
+      <Button
+        onClick={onDownloadReport}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        <DownloadIcon />
+        Download Report
+      </Button>
     </div>
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <StatPill
@@ -226,7 +222,7 @@ const ApplicationFilters = ({ jobs, selectedJob, onJobChange }) => (
       id="job-filter"
       value={selectedJob}
       onChange={onJobChange}
-      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
     >
       <option value="ALL">All Jobs</option>
       {jobs.map((job) => (
@@ -463,7 +459,6 @@ export default function RecruiterApplicationsPage() {
       window.dispatchEvent(new CustomEvent("toast", { detail: toastDetail }));
 
       if (result.success) {
-        // Optimistic UI update for faster feedback
         setApplications((prev) =>
           prev.map((app) =>
             app.id === applicationId
@@ -490,6 +485,42 @@ export default function RecruiterApplicationsPage() {
       }),
     [applications, filter, selectedJob]
   );
+
+  const handleDownloadCsv = useCallback(() => {
+    const jobMap = new Map(jobs.map((job) => [job.id, job.title]));
+    const headers = [
+      "Student Name",
+      "Email",
+      "Faculty No",
+      "Course",
+      "CGPA",
+      "Status",
+      "Applied For Job",
+      "Resume Link",
+    ];
+    const rows = filteredApplications.map((app) =>
+      [
+        `"${app.student.name}"`,
+        `"${app.student.email}"`,
+        `"${app.student.facultyNo || "N/A"}"`,
+        `"${app.student.academicRecords?.courseEnrolled || "N/A"}"`,
+        `"${app.student.academicRecords?.currentCGPA || "N/A"}"`,
+        `"${app.applicationStatus}"`,
+        `"${jobMap.get(app.jobId) || "N/A"}"`,
+        `"${app.student.academicRecords?.resumeLink || "N/A"}"`,
+      ].join(",")
+    );
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "applications-report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [filteredApplications, jobs]);
 
   const applicationStats = useMemo(
     () => ({
@@ -526,11 +557,19 @@ export default function RecruiterApplicationsPage() {
 
   return (
     <div className="p-6 md:p-8 bg-gray-50 min-h-screen">
+      <button
+        onClick={() => router.push("/recruiter")}
+        className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm hover:bg-gray-50 transition-all mb-4"
+      >
+        <ArrowLeftIcon />
+        Back to Dashboard
+      </button>
+
       <ApplicationStatsHeader
         stats={applicationStats}
         activeFilter={filter}
         onFilterChange={setFilter}
-        onBack={() => router.push("/recruiter")}
+        onDownloadReport={handleDownloadCsv}
       />
       <ApplicationFilters
         jobs={jobs}

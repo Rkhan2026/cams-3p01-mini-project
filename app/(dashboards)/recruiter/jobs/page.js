@@ -35,6 +35,22 @@ const Button = ({
 
 // --- SVG Icon Components ---
 
+const ArrowLeftIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+    />
+  </svg>
+);
+
 const PlusIcon = () => (
   <svg
     className="w-5 h-5"
@@ -85,28 +101,9 @@ const UsersIcon = () => (
 
 // --- Child Components ---
 
-const PageHeader = ({ onNewJobClick, onBackClick }) => (
+const PageHeader = ({ onNewJobClick }) => (
   <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
     <div>
-      <button
-        onClick={onBackClick}
-        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 mb-2 transition-colors"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
-        Back to Dashboard
-      </button>
       <h1 className="text-3xl font-bold text-gray-800">My Job Postings</h1>
       <p className="text-gray-500 mt-1">
         Manage, view, and create new job opportunities.
@@ -279,10 +276,16 @@ export default function RecruiterJobsPage() {
 
   return (
     <div className="p-6 md:p-8 bg-gray-50 min-h-screen">
-      <PageHeader
-        onNewJobClick={() => router.push("/recruiter/jobs/new")}
-        onBackClick={() => router.push("/recruiter")}
-      />
+      <Button
+        onClick={() => router.push("/recruiter")}
+        variant="tertiary"
+        className="mb-4"
+      >
+        <ArrowLeftIcon />
+        Back to Dashboard
+      </Button>
+
+      <PageHeader onNewJobClick={() => router.push("/recruiter/jobs/new")} />
 
       {jobs.length === 0 ? (
         <EmptyState onNewJobClick={() => router.push("/recruiter/jobs/new")} />
