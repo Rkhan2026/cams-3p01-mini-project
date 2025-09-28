@@ -5,9 +5,8 @@ This file mirrors the tracked TODO list and is saved at the project root so it's
 - [~] Integrate EmailJS (in-progress)
 
   - Integrate EmailJS sending capabilities into the app.
-  - Files to check/update: `lib/emailjs.js`, relevant API routes under `app/api/*` such as `api/auth/*`, `api/applications/*`, `api/tpo/*`.
-  - Acceptance criteria: server-side sending working (or via client where appropriate), environment variables documented, sample send endpoint and one integration (e.g., approval email) implemented and tested.
-  - Notes/assumptions: `lib/emailjs.js` contains base helpers; we'll add missing code or wire it from API routes. Use environment variables for keys.
+  - EmailJS successfully sends emails from the backend route `app/api/auth/register/route.js` using fetch to EmailJS API.
+    -Only part left is EmailJS for job status updates for students.
 
 - [ ] Report Generation for TPO Admin
 
