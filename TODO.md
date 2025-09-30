@@ -2,12 +2,6 @@
 
 This file mirrors the tracked TODO list and is saved at the project root so it's visible in the editor.
 
-- [~] Integrate EmailJS (in-progress)
-
-  - Integrate EmailJS sending capabilities into the app.
-  - EmailJS successfully sends emails from the backend route `app/api/auth/register/route.js` using fetch to EmailJS API.
-    -Only part left is EmailJS for job status updates for students.
-
 - [ ] Report Generation for TPO Admin
 
   - Add report generation/export feature for TPO admins.
