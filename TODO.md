@@ -1,15 +1,5 @@
 # Project TODO
 
-This file mirrors the tracked TODO list and is saved at the project root so it's visible in the editor.
-
-- [ ] Report Generation for TPO Admin
-
-  - Add report generation/export feature for TPO admins.
-  - Create backend route to export CSV (and optionally PDF) of placements/approvals (suggest: `api/tpo/reports/route.js`).
-  - Add UI in TPO dashboard to request and download reports (e.g., `app/(dashboards)/tpo/approvals/page.js` or a new `reports` page).
-  - Acceptance criteria: ability to generate and download CSV (and optionally PDF) for a selected date range or filters.
-  - Notes: prefer CSV first as low-risk and fast to implement. Use existing Prisma client in `lib/prisma.js`.
-
 - [ ] Minor UI/UX fixes & consistency
 
   - Address small visual and UX issues across the app for consistent spacing, colors, labels and accessible controls.
