@@ -1,11 +1,9 @@
 import { getSession } from "@/lib/session";
-import { PrismaClient } from "@/app/generated/prisma";
+import prisma from "@/lib/prisma"; // use the existing Prisma client
 import { redirect } from "next/navigation";
 import BackButton from "@/components/ui/BackButton";
 import PersonalInfoSection from "@/components/dashboard/student/PersonalInfoSection.jsx";
 import AcademicRecordsSection from "@/components/dashboard/student/AcademicRecordsSection.jsx";
-
-const prisma = new PrismaClient();
 
 const PageHeader = ({ title, subtitle }) => (
   <div className="mb-8">
@@ -22,7 +20,7 @@ export default async function StudentProfile() {
     redirect("/auth/login");
   }
 
-  // Fetch student data from database
+  // Use Prisma from lib
   const student = await prisma.student.findUnique({
     where: { id: session.id },
   });
@@ -40,11 +38,12 @@ export default async function StudentProfile() {
         />
 
         <div className="bg-white shadow rounded-lg">
-          {/* Profile Content */}
           <div className="px-6 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PersonalInfoSection student={student} />
-              <AcademicRecordsSection academicRecords={student.academicRecords} />
+              <AcademicRecordsSection
+                academicRecords={student.academicRecords}
+              />
             </div>
           </div>
         </div>

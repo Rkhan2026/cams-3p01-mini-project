@@ -24,8 +24,11 @@ jobs:
       - name: Build Next.js App
         run: npm run build
 
+      - name: Run Unit Tests
+        run: npm run test:unit
+
       - name: Run Integration Tests
-        run: npm test
+        run: npm run test:integration
 
   deploy:
     runs-on: ubuntu-latest
