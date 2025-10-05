@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import RegistrationForm from "@/components/Registration_Form/RegistrationForm";
-import Logo from "@/components/Logo";
+import Logo from "@/components/shared/Logo";
 
 // A small component to read search params safely on the server
 function RegistrationPageContent() {

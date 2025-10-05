@@ -14,7 +14,7 @@ import {
   SearchIcon,
   DocumentTextIcon,
   UserIcon,
-} from "../../../components/icons";
+} from "../../../components/ui/Icons.js";
 
 // Quick Actions component using our extracted QuickActionCard
 const QuickActions = ({ onNavigate }) => {
@@ -63,6 +63,7 @@ export default function StudentDashboard() {
   });
   const [recentJobs, setRecentJobs] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
+  const [appliedJobIds, setAppliedJobIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Simple navigation handler (replace with Next.js's useRouter in your app)
@@ -105,6 +106,7 @@ export default function StudentDashboard() {
 
           setRecentJobs(activeJobs.slice(0, 3));
           setRecentApplications(applications.slice(0, 3));
+          setAppliedJobIds(applications.map(app => app.jobId));
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -142,7 +144,12 @@ export default function StudentDashboard() {
         <StudentStats stats={stats} />
         <QuickActions onNavigate={handleNavigate} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RecentJobs jobs={recentJobs} onNavigate={handleNavigate} />
+          <RecentJobs 
+            key={`recent-jobs-${recentApplications.length}`}
+            jobs={recentJobs} 
+            appliedJobIds={appliedJobIds}
+            onNavigate={handleNavigate} 
+          />
           <RecentApplications
             applications={recentApplications}
             onNavigate={handleNavigate}

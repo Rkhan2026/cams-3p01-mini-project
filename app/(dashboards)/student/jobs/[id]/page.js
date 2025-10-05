@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { 
+  ArrowLeftIcon, 
+  CalendarIcon, 
+  CheckCircleIcon, 
+  XCircleIcon 
+} from "../../../../../components/ui/Icons.js";
 
 // --- Reusable UI Components ---
 const Button = ({ onClick, className, children, ...props }) => (
@@ -12,71 +18,6 @@ const Button = ({ onClick, className, children, ...props }) => (
   >
     {children}
   </button>
-);
-
-// --- SVG Components ---
-const ArrowLeftIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-    />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg
-    className="w-5 h-5 mr-2 text-gray-500"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
-);
-
-const CheckCircleIcon = () => (
-  <svg
-    className="w-6 h-6 mr-3 text-green-600"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const XCircleIcon = () => (
-  <svg
-    className="w-6 h-6 mr-3 text-red-600"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
 );
 
 // --- Child Components ---
@@ -112,7 +53,7 @@ const ApplicationStatus = ({ hasApplied, deadlinePassed }) => {
   if (hasApplied) {
     return (
       <div className="bg-green-50 border-l-4 border-green-500 rounded-r-lg p-4 flex items-center">
-        <CheckCircleIcon />
+        <CheckCircleIcon className="w-6 h-6 mr-3 text-green-600" />
         <div>
           <p className="font-semibold text-green-800">Application Submitted</p>
           <p className="text-sm text-green-700">
@@ -125,7 +66,7 @@ const ApplicationStatus = ({ hasApplied, deadlinePassed }) => {
   if (deadlinePassed) {
     return (
       <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4 flex items-center">
-        <XCircleIcon />
+        <XCircleIcon className="w-6 h-6 mr-3 text-red-600" />
         <div>
           <p className="font-semibold text-red-800">Applications Closed</p>
           <p className="text-sm text-red-700">
@@ -279,7 +220,7 @@ export default function JobDetailsPage() {
 
           <div className="border-t border-b border-gray-200 py-4 mb-8">
             <div className="flex items-center text-base">
-              <CalendarIcon />
+              <CalendarIcon className="w-5 h-5 mr-2 text-gray-500" />
               <strong className="text-gray-700">Deadline:</strong>
               <span className="ml-2 font-medium text-gray-900">
                 {formatDate(job.applicationDeadline)}

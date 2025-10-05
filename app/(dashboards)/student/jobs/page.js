@@ -4,69 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-// --- ICONS ---
-const SearchIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-    />
-  </svg>
-);
-const BriefcaseIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-    />
-  </svg>
-);
-const ArrowLeftIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-    />
-  </svg>
-);
-const MoneyIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v.01M12 18v-2m0-4a2 2 0 00-2 2m2-2a2 2 0 012 2m0 0c0 1.105-.895 2-2 2m-2 2a2 2 0 01-2-2m2 2a2 2 0 002-2"
-    />
-  </svg>
-);
-// --- END ICONS ---
+import { 
+  SearchIcon, 
+  BriefcaseIcon, 
+  ArrowLeftIcon, 
+  MoneyIcon 
+} from "../../../../components/ui/Icons.js";
 
 const JobCardSkeleton = () => (
   <div className="bg-white border rounded-2xl p-6 animate-pulse">
@@ -100,6 +43,7 @@ const PageHeader = ({ title, subtitle, onBack }) => (
 
 export default function StudentJobsPage() {
   const [jobs, setJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredJobs, setFilteredJobs] = useState([]);
@@ -130,16 +74,26 @@ export default function StudentJobsPage() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch("/api/jobs?status=APPROVED");
-      const result = await response.json();
-      if (result.success) {
-        const activeJobs = result.jobs.filter(
+      const [jobsResponse, applicationsResponse] = await Promise.all([
+        fetch("/api/jobs?status=APPROVED"),
+        fetch("/api/applications")
+      ]);
+      
+      const jobsResult = await jobsResponse.json();
+      const applicationsResult = await applicationsResponse.json();
+      
+      if (jobsResult.success) {
+        const activeJobs = jobsResult.jobs.filter(
           (job) => new Date(job.applicationDeadline) > new Date()
         );
         setJobs(activeJobs);
       }
+      
+      if (applicationsResult.success) {
+        setApplications(applicationsResult.applications);
+      }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -234,6 +188,9 @@ export default function StudentJobsPage() {
               /\(([^)]+)\)\s*\n*/,
               ""
             );
+            
+            // Check if student has already applied to this job
+            const hasApplied = applications.some(app => app.jobId === job.id);
 
             return (
               <div
@@ -248,14 +205,21 @@ export default function StudentJobsPage() {
                         {displayTitle}
                       </h3>
                       <p className="text-sm font-medium text-gray-600">
-                        {job.recruiter.name}
+                        {job.recruiter.companyProfile || job.recruiter.name}
                       </p>
                     </div>
-                    <span
-                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${deadlineStatus.bgColor} ${deadlineStatus.textColor}`}
-                    >
-                      {deadlineStatus.text}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      {hasApplied && (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                          Already Applied
+                        </span>
+                      )}
+                      <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${deadlineStatus.bgColor} ${deadlineStatus.textColor}`}
+                      >
+                        {deadlineStatus.text}
+                      </span>
+                    </div>
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-3 mt-4">
                     {displayDescription}
@@ -276,9 +240,13 @@ export default function StudentJobsPage() {
                 <div className="mt-5">
                   <Button
                     onClick={() => router.push(`/student/jobs/${job.id}`)}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className={`w-full ${hasApplied 
+                      ? 'bg-gray-400 hover:bg-gray-500' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                    disabled={hasApplied}
                   >
-                    View & Apply
+                    {hasApplied ? 'Already Applied' : 'View & Apply'}
                   </Button>
                 </div>
               </div>

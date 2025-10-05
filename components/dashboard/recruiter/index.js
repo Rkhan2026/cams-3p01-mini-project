@@ -4,3 +4,5 @@ export { default as JobCard } from './JobCard.jsx';
 export { default as RecentJobsList } from './RecentJobsList.jsx';
 export { default as RecentApplicationsList } from './RecentApplicationsList.jsx';
 export { default as Alerts } from './Alerts.jsx';
+export { default as JobsPageHeader } from './JobsPageHeader.jsx';
+export { default as JobsEmptyState } from './JobsEmptyState.jsx';

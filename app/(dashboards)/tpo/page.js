@@ -19,7 +19,7 @@ import {
   UserGroupIcon,
   DocumentCheckIcon,
   ChartBarIcon,
-} from "../../../components/icons";
+} from "../../../components/ui/Icons.js";
 
 // Quick Actions component using our extracted QuickActionCard
 const QuickActions = ({ onNavigate }) => {

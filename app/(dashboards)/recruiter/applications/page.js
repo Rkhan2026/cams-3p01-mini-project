@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CheckIcon,
+  XIcon,
+  CalendarIcon,
+  UserAddIcon,
+  DownloadIcon,
+  ArrowLeftIcon,
+} from "../../../../components/ui/Icons.js";
 
-// --- Reusable UI & Icon Components (can be moved to separate files) ---
+// --- Reusable UI Components ---
 
 const Button = ({ onClick, className, children, ...props }) => (
   <button
@@ -13,97 +21,6 @@ const Button = ({ onClick, className, children, ...props }) => (
   >
     {children}
   </button>
-);
-
-const CheckIcon = () => (
-  <svg
-    className="w-4 h-4 mr-1"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-const XIcon = () => (
-  <svg
-    className="w-4 h-4 mr-1"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
-    />
-  </svg>
-);
-const CalendarIcon = () => (
-  <svg
-    className="w-4 h-4 mr-1"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
-);
-const UserAddIcon = () => (
-  <svg
-    className="w-4 h-4 mr-1"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-    />
-  </svg>
-);
-const DownloadIcon = () => (
-  <svg
-    className="w-4 h-4 mr-1.5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-    />
-  </svg>
-);
-const ArrowLeftIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-    />
-  </svg>
 );
 
 // --- Child Components ---
@@ -155,13 +72,6 @@ const ApplicationStatsHeader = ({
       <h1 className="text-2xl font-bold text-gray-800">
         Applications Management
       </h1>
-      <Button
-        onClick={onDownloadReport}
-        className="bg-blue-600 hover:bg-blue-700"
-      >
-        <DownloadIcon />
-        Download Report
-      </Button>
     </div>
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <StatPill
@@ -241,13 +151,13 @@ const ActionButtons = ({ application, onStatusUpdate }) => {
         label: "Shortlist",
         status: "SHORTLISTED",
         color: "bg-yellow-500 hover:bg-yellow-600",
-        icon: <CheckIcon />,
+        icon: <CheckIcon className="w-4 h-4 mr-1" />,
       },
       {
         label: "Reject",
         status: "REJECTED",
         color: "bg-red-500 hover:bg-red-600",
-        icon: <XIcon />,
+        icon: <XIcon className="w-4 h-4 mr-1" />,
       },
     ],
     SHORTLISTED: [
@@ -255,13 +165,13 @@ const ActionButtons = ({ application, onStatusUpdate }) => {
         label: "Schedule Interview",
         status: "INTERVIEW_SCHEDULED",
         color: "bg-purple-500 hover:bg-purple-600",
-        icon: <CalendarIcon />,
+        icon: <CalendarIcon className="w-4 h-4 mr-1" />,
       },
       {
         label: "Reject",
         status: "REJECTED",
         color: "bg-red-500 hover:bg-red-600",
-        icon: <XIcon />,
+        icon: <XIcon className="w-4 h-4 mr-1" />,
       },
     ],
     INTERVIEW_SCHEDULED: [
@@ -269,13 +179,13 @@ const ActionButtons = ({ application, onStatusUpdate }) => {
         label: "Hire",
         status: "HIRED",
         color: "bg-green-500 hover:bg-green-600",
-        icon: <UserAddIcon />,
+        icon: <UserAddIcon className="w-4 h-4 mr-1" />,
       },
       {
         label: "Reject",
         status: "REJECTED",
         color: "bg-red-500 hover:bg-red-600",
-        icon: <XIcon />,
+        icon: <XIcon className="w-4 h-4 mr-1" />,
       },
     ],
   };
@@ -371,7 +281,7 @@ const ApplicationCard = ({ application, onStatusUpdate }) => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
           >
-            <DownloadIcon /> View Full Resume
+            <DownloadIcon className="w-4 h-4 mr-1.5" /> View Full Resume
           </a>
         </div>
       )}
@@ -561,7 +471,7 @@ export default function RecruiterApplicationsPage() {
         onClick={() => router.push("/recruiter")}
         className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm hover:bg-gray-50 transition-all mb-4"
       >
-        <ArrowLeftIcon />
+        <ArrowLeftIcon className="w-5 h-5" />
         Back to Dashboard
       </button>
 

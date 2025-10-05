@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
-import Button from './ui/Button';
+import Button from '../ui/Button';
 
 export default function PlacementReportEnhanced({ data, onRefresh }) {
   const [filters, setFilters] = useState({

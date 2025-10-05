@@ -22,6 +22,17 @@ export default function RecentApplications({ applications, onNavigate, className
     return <Badge status={config.status}>{config.label}</Badge>;
   };
 
+  // Extract job title from parentheses in description
+  const extractJobTitle = (description) => {
+    const match = description.match(/\(([^)]+)\)/);
+    return match ? match[1] : 'Position';
+  };
+
+  // Get description without parentheses content
+  const getCleanDescription = (description) => {
+    return description.replace(/\s*\([^)]*\)\s*/g, '').trim();
+  };
+
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
@@ -49,22 +60,32 @@ export default function RecentApplications({ applications, onNavigate, className
         />
       ) : (
         <div className="space-y-4">
-          {applications.map((app) => (
-            <div key={app.id} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800">
-                  {app.job.recruiter.name}
-                </h3>
-                {getStatusBadge(app.applicationStatus)}
+          {applications.map((app) => {
+            const jobTitle = extractJobTitle(app.job.jobDescription);
+            const cleanDescription = getCleanDescription(app.job.jobDescription);
+            
+            return (
+              <div key={app.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">
+                      {jobTitle}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {app.job.recruiter.companyProfile || app.job.recruiter.name}
+                    </p>
+                  </div>
+                  {getStatusBadge(app.applicationStatus)}
+                </div>
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">
+                  {cleanDescription}
+                </p>
+                <div className="text-xs text-gray-400">
+                  Deadline: {formatDate(app.job.applicationDeadline)}
+                </div>
               </div>
-              <p className="text-sm text-gray-500 line-clamp-1 mb-2">
-                {app.job.jobDescription}
-              </p>
-              <div className="text-xs text-gray-400">
-                Deadline: {formatDate(app.job.applicationDeadline)}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

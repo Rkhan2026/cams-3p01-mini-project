@@ -15,7 +15,7 @@ import {
   PlusCircleIcon, 
   DocumentTextIcon, 
   CollectionIcon 
-} from "../../../components/icons";
+} from "../../../components/ui/Icons.js";
 
 // Quick Actions component using our extracted QuickActionCard
 const QuickActions = ({ onNavigate }) => {
@@ -91,7 +91,9 @@ export default function RecruiterDashboard() {
             rejectedJobs: jobs.filter((j) => j.approvalStatus === "REJECTED")
               .length,
           }));
-          setRecentJobs(jobs.slice(0, 3));
+          // Sort jobs by creation date (newest first) before taking recent jobs
+          const sortedJobs = jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setRecentJobs(sortedJobs.slice(0, 3));
         }
 
         if (applicationsResult.success) {

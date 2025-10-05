@@ -3,24 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import PlacementReportEnhanced from "../../../../components/PlacementReportEnhanced";
-
-// --- SVG Icon ---
-const ArrowLeftIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-    />
-  </svg>
-);
+import PlacementReportGenerator from "@/components/reports/PlacementReportGenerator";
+import { ArrowLeftIcon } from "@/components/ui/Icons.js";
 
 export default function ReportsPage() {
   const [placementData, setPlacementData] = useState(null);
@@ -104,7 +88,7 @@ export default function ReportsPage() {
 
       {/* Main Content */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <PlacementReportEnhanced
+        <PlacementReportGenerator
           data={placementData}
           onRefresh={fetchPlacementData}
         />

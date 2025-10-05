@@ -1,7 +1,7 @@
 "use client";
 
-import Button from "./ui/Button";
-import Logo from "./Logo";
+import Button from "../ui/Button";
+import Logo from "../shared/Logo";
 import { useEffect, useState, useRef } from "react";
 
 export default function Header() {
@@ -44,15 +44,38 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           {session && (
-            <div className="hidden sm:flex items-center bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 rounded-full border border-blue-200">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-700">
-                {session.role === "STUDENT"
-                  ? "Student"
-                  : session.role === "RECRUITER"
-                  ? "Recruiter"
-                  : "TPO Admin"}
-              </span>
+            <div className="hidden sm:flex items-center gap-3">
+              {/* User Avatar */}
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                  {session.name ? session.name.charAt(0).toUpperCase() : session.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                {/* Online status indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+              </div>
+              
+              {/* User Info */}
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-900">
+                  {session.name || session.email?.split('@')[0] || 'User'}
+                </span>
+                <div className="flex items-center gap-1">
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    session.role === "STUDENT" 
+                      ? "bg-blue-500" 
+                      : session.role === "RECRUITER" 
+                      ? "bg-purple-500" 
+                      : "bg-emerald-500"
+                  }`}></div>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {session.role === "STUDENT"
+                      ? "Student"
+                      : session.role === "RECRUITER"
+                      ? "Recruiter"
+                      : "TPO Admin"}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -85,7 +108,7 @@ export default function Header() {
               <div className="relative" ref={dropdownRef}>
                 <Button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
+                  className=" border-gray-300 px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
                 >
                   Register
                   {/* Dropdown arrow icon */}

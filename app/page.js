@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Logo from "@/components/Logo";
-import RoleCard from "@/components/RoleCard"; // <-- Import the new component
+import Logo from "@/components/shared/Logo";
+import RoleCard from "@/components/ui/RoleCard"; // <-- Import the new component
 
 // It's good practice to have icons as their own components
 const StudentIcon = () => (

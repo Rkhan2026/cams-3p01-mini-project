@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeftIcon } from "../../../../components/ui/Icons.js";
 
 // --- Reusable UI Components (can be moved to separate files) ---
 
@@ -13,24 +14,6 @@ const Button = ({ onClick, className, children, ...props }) => (
   >
     {children}
   </button>
-);
-
-// --- SVG Icon Components ---
-
-const ArrowLeftIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-    />
-  </svg>
 );
 
 // --- Child Components ---
@@ -89,6 +72,17 @@ const JobApprovalCard = ({ job, onApprove }) => {
       minute: "2-digit",
     });
 
+  // Extract job title from parentheses in job description
+  const extractJobTitle = (description) => {
+    const match = description.match(/\(([^)]+)\)/);
+    return match ? match[1] : "Job Position";
+  };
+
+  // Extract description without parentheses
+  const extractDescriptionWithoutParentheses = (description) => {
+    return description.replace(/\([^)]*\)/g, '').trim();
+  };
+
   const statusInfo = {
     APPROVED: {
       text: "✓ This job posting has been approved and is visible to students.",
@@ -106,7 +100,7 @@ const JobApprovalCard = ({ job, onApprove }) => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            {job.recruiter.name}
+            {extractJobTitle(job.jobDescription)}
           </h3>
           <p className="text-sm text-gray-500">
             <strong>Deadline:</strong> {formatDate(job.applicationDeadline)}
@@ -131,6 +125,14 @@ const JobApprovalCard = ({ job, onApprove }) => {
       <div className="space-y-4">
         <div>
           <h4 className="font-semibold text-sm text-gray-800 mb-1">
+            Recruiter
+          </h4>
+          <p className="text-sm bg-gray-50 p-3 rounded-lg text-gray-700 whitespace-pre-wrap">
+            {job.recruiter.name}
+          </p>
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm text-gray-800 mb-1">
             Company Profile
           </h4>
           <p className="text-sm bg-gray-50 p-3 rounded-lg text-gray-700 whitespace-pre-wrap">
@@ -142,7 +144,7 @@ const JobApprovalCard = ({ job, onApprove }) => {
             Job Description
           </h4>
           <p className="text-sm bg-gray-50 p-3 rounded-lg text-gray-700 whitespace-pre-wrap">
-            {job.jobDescription}
+            {extractDescriptionWithoutParentheses(job.jobDescription)}
           </p>
         </div>
         <div>

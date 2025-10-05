@@ -2,60 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-// --- SVG Icons ---
-const BackArrowIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-    />
-  </svg>
-);
-const CalendarIcon = (props) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18"
-    />
-  </svg>
-);
-const SpinnerIcon = () => (
-  <svg
-    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-  >
-    <circle
-      className="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-    ></circle>
-    <path
-      className="opacity-75"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-    ></path>
-  </svg>
-);
+import { ArrowLeftIcon, CalendarIcon, SpinnerIcon } from "../../../../../components/ui/Icons.js";
 
 // --- Self-Contained UI Components ---
 const Label = ({ children, ...props }) => (
@@ -100,7 +47,7 @@ const PageHeader = ({ title, subtitle, onBack }) => (
       onClick={onBack}
       className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all mb-4"
     >
-      <BackArrowIcon className="h-5 w-5" />
+      <ArrowLeftIcon className="h-5 w-5" />
       Back to All Jobs
     </button>
     <h1 className="text-3xl font-bold text-gray-800">{title}</h1>

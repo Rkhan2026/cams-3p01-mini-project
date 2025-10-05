@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Button from "@/components/ui/Button";
-import Logo from "@/components/Logo";
+import Logo from "@/components/shared/Logo";
 
 export default function RecruiterLayout({ children }) {
   const router = useRouter();

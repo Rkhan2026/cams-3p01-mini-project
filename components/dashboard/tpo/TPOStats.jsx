@@ -1,5 +1,10 @@
-import StatCard from '../shared/StatCard.jsx';
-import { UserGroupIcon, BriefcaseIcon } from '../../icons';
+import StatCard from "../shared/StatCard.jsx";
+import {
+  AcademicCapIcon,
+  BuildingOfficeIcon,
+  ClipboardDocumentListIcon,
+  TrophyIcon,
+} from "../../ui/Icons.js";
 
 /**
  * TPO dashboard statistics component
@@ -10,33 +15,36 @@ import { UserGroupIcon, BriefcaseIcon } from '../../icons';
 export default function TPOStats({ stats, className = "", ...props }) {
   const statCards = [
     {
-      icon: <UserGroupIcon className="w-8 h-8 text-white" />,
+      icon: <AcademicCapIcon className="w-8 h-8 text-white" />,
       value: stats.pendingStudents,
       label: "Pending Students",
-      color: "blue"
+      color: "blue",
     },
     {
-      icon: <UserGroupIcon className="w-8 h-8 text-white" />,
+      icon: <BuildingOfficeIcon className="w-8 h-8 text-white" />,
       value: stats.pendingRecruiters,
       label: "Pending Recruiters",
-      color: "green"
+      color: "green",
     },
     {
-      icon: <BriefcaseIcon className="w-8 h-8 text-white" />,
+      icon: <ClipboardDocumentListIcon className="w-8 h-8 text-white" />,
       value: stats.pendingJobs,
       label: "Pending Jobs",
-      color: "yellow"
+      color: "yellow",
     },
     {
-      icon: <BriefcaseIcon className="w-8 h-8 text-white" />,
+      icon: <TrophyIcon className="w-8 h-8 text-white" />,
       value: stats.hiredStudents,
       label: "Students Hired",
-      color: "purple"
-    }
+      color: "purple",
+    },
   ];
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ${className}`} {...props}>
+    <div
+      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ${className}`}
+      {...props}
+    >
       {statCards.map((card, index) => (
         <StatCard key={index} {...card} />
       ))}
