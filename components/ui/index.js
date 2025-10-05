@@ -9,5 +9,5 @@ export { default as Label } from './Label.jsx';
 export { default as Select } from './Select.jsx';
 export { default as Table } from './Table.jsx';
 
-// Re-export existing icons
-export * from './Icons.js';
+// Re-export icons from the new icons directory
+export * from '../icons/index.js';

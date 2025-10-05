@@ -4,7 +4,7 @@ import {
   BuildingOfficeIcon,
   ClipboardDocumentListIcon,
   TrophyIcon,
-} from "../../ui/Icons.js";
+} from "../../icons/EducationIcons.jsx";
 
 /**
  * TPO dashboard statistics component

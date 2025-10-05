@@ -11,7 +11,7 @@ import {
   ApplicationsStats 
 } from "../../../../components/dashboard/student";
 import { FullPageSpinner } from "../../../../components/ui/LoadingSpinner.jsx";
-import { PlusIcon } from "../../../../components/ui/Icons.js";
+import { PlusIcon } from "../../../../components/icons/DashboardIcons.jsx";
 
 // --- Main Page Component ---
 

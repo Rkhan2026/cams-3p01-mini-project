@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { JobCard, JobsPageHeader, JobsEmptyState } from "../../../../components/dashboard/recruiter";
 import Button from "../../../../components/ui/Button.jsx";
 import { FullPageSpinner } from "../../../../components/ui/LoadingSpinner.jsx";
-import { ArrowLeftIcon } from "../../../../components/ui/Icons.js";
+import { ArrowLeftIcon } from "../../../../components/icons/ArrowIcons.jsx";
 
 // --- Main Parent Component ---
 
