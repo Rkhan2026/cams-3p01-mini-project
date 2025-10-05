@@ -6,6 +6,13 @@ on:
       - main # or 'master' depending on your default branch
   pull_request:
 
+# For Production deploys: force Prisma CLI and runtime to use the PROD DB URL.
+# DATABASE_PRISMA_DATABASE_URL is set to the production DB so Prisma CLI commands (migrate, generate) use it automatically.
+# PRODUCTION_DATABASE_URL is also exposed so we can verify they match in guard steps.
+env:
+  DATABASE_PRISMA_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+  PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,6 +27,14 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+
+      # Apply migrations early to keep DB schema consistent
+      - name: Deploy Prisma Migrations
+        run: npx prisma migrate deploy
+
+      # Generate Prisma client before building the app
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
       - name: Build Next.js App
         run: npm run build
@@ -48,6 +63,7 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      # Ensure DB schema is up to date in production
       - name: Deploy Prisma Migrations
         env:
           DATABASE_PRISMA_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
@@ -56,8 +72,11 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Deploy to Vercel
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+      # Pass DB env to Vercel so build and runtime connect to production DB
+      - name: Deploy to Vercel (Production)
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DATABASE_PRISMA_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
