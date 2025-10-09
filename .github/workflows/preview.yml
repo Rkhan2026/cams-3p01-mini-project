@@ -3,11 +3,8 @@ name: Preview Deployment Pipeline
 on:
   push:
     branches:
-      - testing # or any branch you use for staging
+      - testing
 
-# For Preview deploys: force Prisma CLI and runtime to use the TEST DB URL.
-# DATABASE_PRISMA_DATABASE_URL is set to the testing DB so Prisma CLI commands (migrate, generate) use it automatically.
-# TESTING_DATABASE_URL is also exposed so we can verify they match in a guard step.
 env:
   DATABASE_PRISMA_DATABASE_URL: ${{ secrets.TESTING_DATABASE_URL }}
   TESTING_DATABASE_URL: ${{ secrets.TESTING_DATABASE_URL }}
@@ -27,22 +24,33 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Apply Prisma migrations before build
       - name: Deploy Prisma Migrations
         run: npx prisma migrate deploy
 
-      # Generate Prisma client to ensure Next.js build can use it
       - name: Generate Prisma Client
         run: npx prisma generate
 
       - name: Build Next.js App
         run: npm run build
 
+      # Start dev server in background for integration tests
+      - name: Start Dev Server
+        run: |
+          npm run dev &
+          echo $! > server.pid
+
+      - name: Wait for Dev Server
+        run: npx wait-on http://localhost:3000
+
       - name: Run Unit Tests
         run: npm run test:unit
 
       - name: Run Integration Tests
         run: npm run test:integration
+
+      - name: Stop Dev Server
+        if: always()
+        run: kill $(cat server.pid)
 
   deploy-preview:
     runs-on: ubuntu-latest
@@ -62,7 +70,6 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      # Ensure DB schema is up to date before deploying
       - name: Deploy Prisma Migrations to Testing
         env:
           DATABASE_PRISMA_DATABASE_URL: ${{ secrets.TESTING_DATABASE_URL }}
@@ -71,7 +78,6 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      # Pass DB env during deploy to ensure preview connects to testing DB
       - name: Deploy Preview to Vercel
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
