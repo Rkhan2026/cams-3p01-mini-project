@@ -42,7 +42,6 @@ const LoginForm = ({ onSuccess, onError, className = "" }) => {
         name="password"
         required
         showForgotPassword={true}
-        forgotPasswordHref="/auth/forgot-password"
       />
 
       <FormErrorMessage error={error} />

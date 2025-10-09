@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export const useAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -29,16 +29,14 @@ export const useAuth = () => {
             window.location.href = "/tpo";
           }
         }, 500);
-        
+
         // Don't set loading to false here as we're navigating away
         return;
       } else {
-        setError(
-          result.error?.message || "Invalid credentials. Please try again."
-        );
+        setError(result.error?.message || "Invalid credentials");
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError("An unexpected error occurred");
     }
 
     setLoading(false);
@@ -52,6 +50,6 @@ export const useAuth = () => {
     login,
     loading,
     error,
-    clearError
+    clearError,
   };
 };

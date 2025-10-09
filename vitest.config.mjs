@@ -11,8 +11,12 @@ export default defineConfig({
   ],
   test: {
     environment: "jsdom",
+    sequence: {
+      concurrency: 1, // forces sequential execution
+    },
     setupFiles: ["./tests/setup.js"],
     globals: true,
+    fileParallelism: false, // run test files sequentially
   },
   resolve: {
     alias: {
