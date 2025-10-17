@@ -148,9 +148,9 @@ export default function RecruiterApplicationsPage() {
   if (loading) {
     return (
       <div className="h-screen bg-gray-50">
-        <LoadingState 
-          message="Loading Applications..." 
-          size="lg" 
+        <LoadingState
+          message="Loading Applications..."
+          size="lg"
           fullScreen={true}
         />
       </div>
@@ -183,13 +183,18 @@ export default function RecruiterApplicationsPage() {
         <ApplicationsEmptyState />
       ) : (
         <div className="space-y-4">
-          {filteredApplications.map((application) => (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-              onStatusUpdate={updateApplicationStatus}
-            />
-          ))}
+          {filteredApplications.map((application) => {
+            const jobForApp =
+              jobs.find((j) => j.id === application.jobId) || null;
+            return (
+              <ApplicationCard
+                key={application.id}
+                application={application}
+                job={jobForApp}
+                onStatusUpdate={updateApplicationStatus}
+              />
+            );
+          })}
         </div>
       )}
     </div>

@@ -205,3 +205,19 @@ export const ChartBarIcon = ({ className = "w-6 h-6", ...props }) => (
     />
   </svg>
 );
+
+// New grid/dashboard icon — four tiles to represent a dashboard overview
+export const DashboardGridIcon = ({ className = "w-6 h-6", ...props }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    {...props}
+  >
+    <rect x="3" y="3" width="8" height="8" rx="1" strokeWidth={2} />
+    <rect x="13" y="3" width="8" height="8" rx="1" strokeWidth={2} />
+    <rect x="3" y="13" width="8" height="8" rx="1" strokeWidth={2} />
+    <rect x="13" y="13" width="8" height="8" rx="1" strokeWidth={2} />
+  </svg>
+);

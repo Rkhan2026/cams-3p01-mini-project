@@ -37,22 +37,6 @@ export default function RecruiterFormFields() {
             required
           />
         </div>
-        <div>
-          <label
-            htmlFor="companyProfile"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Company Profile
-          </label>
-          <textarea
-            id="companyProfile"
-            name="companyProfile"
-            placeholder="Describe your company..."
-            className="text-black w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            rows={4}
-            required
-          />
-        </div>
       </div>
       {/* Submit Button */}
       <div className="pt-5">

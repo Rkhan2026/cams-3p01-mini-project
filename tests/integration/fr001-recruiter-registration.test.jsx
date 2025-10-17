@@ -77,10 +77,6 @@ describe("FR-001: Recruiter Registration Integration Tests", () => {
         screen.getByLabelText(/company name/i),
         "TechCorp Solutions"
       );
-      await user.type(
-        screen.getByLabelText(/company profile/i),
-        "Leading technology company"
-      );
 
       await user.click(screen.getByRole("button", { name: /create account/i }));
 
@@ -91,9 +87,7 @@ describe("FR-001: Recruiter Registration Integration Tests", () => {
           });
           expect(createdRecruiter).toBeTruthy();
           expect(createdRecruiter.accountStatus).toBe("PENDING_RECRUITER");
-          expect(createdRecruiter.companyProfile).toBe(
-            "Leading technology company"
-          );
+          expect(createdRecruiter.companyProfile).toBe("TechCorp Solutions");
         },
         { timeout: 10000 }
       );

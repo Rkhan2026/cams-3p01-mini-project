@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 export async function POST(request) {
   try {
     const session = await getSession();
-    
+
     // Check if user is a recruiter
     if (!session || session.role !== "RECRUITER") {
       return Response.json(
@@ -16,19 +16,47 @@ export async function POST(request) {
     const body = await request.json();
     const { jobDescription, eligibilityCriteria, applicationDeadline } = body;
 
-    // Validation
-    if (!jobDescription || !eligibilityCriteria || !applicationDeadline) {
+    // Validation: jobDescription and applicationDeadline are required; eligibilityCriteria may be null
+    if (!jobDescription || !applicationDeadline) {
       return Response.json(
-        { success: false, error: { message: "All fields are required" } },
+        {
+          success: false,
+          error: { message: "Job description and deadline are required" },
+        },
         { status: 400 }
       );
+    }
+
+    // If salary present in jobDescription, prefer to validate any recruiter-provided salary snippet
+    // We expect recruiter's form to enforce 'X LPA' format; double-check here if a Salary: line exists.
+    const salaryLineMatch =
+      typeof jobDescription === "string" &&
+      jobDescription.match(/Salary:\s*(.+)/i);
+    if (salaryLineMatch) {
+      const salaryText = salaryLineMatch[1].trim();
+      const salaryRe = /^\d+(?:\.\d+)?\s+LPA$/i;
+      if (salaryText && !salaryRe.test(salaryText)) {
+        return Response.json(
+          {
+            success: false,
+            error: {
+              message:
+                "Salary must be in the format 'X LPA' or 'X.Y LPA' when provided from the recruiter form.",
+            },
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate deadline is in the future
     const deadline = new Date(applicationDeadline);
     if (deadline <= new Date()) {
       return Response.json(
-        { success: false, error: { message: "Application deadline must be in the future" } },
+        {
+          success: false,
+          error: { message: "Application deadline must be in the future" },
+        },
         { status: 400 }
       );
     }
@@ -39,24 +67,26 @@ export async function POST(request) {
         jobDescription,
         eligibilityCriteria,
         applicationDeadline: deadline,
-        approvalStatus: "PENDING"
+        approvalStatus: "PENDING",
       },
       include: {
         recruiter: {
           select: {
             name: true,
-            companyProfile: true
-          }
-        }
-      }
+            companyProfile: true,
+          },
+        },
+      },
     });
 
-    return Response.json({
-      success: true,
-      message: "Job posting created and submitted for approval",
-      job: jobPosting
-    }, { status: 201 });
-
+    return Response.json(
+      {
+        success: true,
+        message: "Job posting created and submitted for approval",
+        job: jobPosting,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Job creation error:", error);
     return Response.json(
@@ -97,7 +127,7 @@ export async function GET(request) {
     if (search) {
       whereClause.OR = [
         { jobDescription: { contains: search, mode: "insensitive" } },
-        { eligibilityCriteria: { contains: search, mode: "insensitive" } }
+        { eligibilityCriteria: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -107,25 +137,48 @@ export async function GET(request) {
         recruiter: {
           select: {
             name: true,
-            companyProfile: true
-          }
+            companyProfile: true,
+          },
         },
         _count: {
           select: {
-            applications: true
-          }
-        }
+            applications: true,
+          },
+        },
       },
       orderBy: {
-        applicationDeadline: "asc"
-      }
+        applicationDeadline: "asc",
+      },
     });
+
+    // Derive a simple `title` field from the free-form jobDescription so
+    // the frontend can show a concise job title without depending on build-time parsing.
+    const extractTitle = (description) => {
+      if (!description) return null;
+      // parentheses
+      const paren = description.match(/\(([^)]+)\)/);
+      if (paren) return paren[1].trim();
+      // '<Title> at <Company>'
+      const atMatch = description.match(/^(.+?)\s+at\s+/i);
+      if (atMatch) return atMatch[1].trim();
+      // '<Title> CTC' or similar
+      const ctcMatch = description.match(/^(.+?)\s+CTC[:\s]/i);
+      if (ctcMatch) return ctcMatch[1].trim();
+      // leading phrase
+      const leadMatch = description.match(/^([^.:]+)[.:]/);
+      if (leadMatch) return leadMatch[1].trim();
+      return null;
+    };
+
+    const jobsWithTitle = jobs.map((j) => ({
+      ...j,
+      title: extractTitle(j.jobDescription) || null,
+    }));
 
     return Response.json({
       success: true,
-      jobs
+      jobs: jobsWithTitle,
     });
-
   } catch (error) {
     console.error("Jobs fetch error:", error);
     return Response.json(

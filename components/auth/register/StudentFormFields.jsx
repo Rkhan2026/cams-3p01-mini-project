@@ -47,7 +47,7 @@ export default function StudentFormFields() {
           />
           <FormField
             name="facultyNo"
-            label="Faculty Number (Optional)"
+            label="Faculty Number"
             placeholder="e.g., 20COB123"
           />
           <FormField

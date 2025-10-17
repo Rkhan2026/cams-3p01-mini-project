@@ -77,11 +77,14 @@ export async function POST(request) {
     } else if (role === "RECRUITER") {
       const { companyName, companyProfile } = rest;
 
-      if (!companyName || !companyProfile) {
+      // prefer explicit companyProfile, otherwise use companyName string
+      const profileToSave = companyProfile || companyName;
+
+      if (!profileToSave) {
         return NextResponse.json(
           {
             success: false,
-            error: { message: "Company name and profile are required" },
+            error: { message: "Company name or profile is required" },
           },
           { status: 400 }
         );
@@ -92,7 +95,7 @@ export async function POST(request) {
           name,
           email,
           passwordHash,
-          companyProfile,
+          companyProfile: profileToSave,
           accountStatus: "PENDING_RECRUITER",
         },
       });
@@ -119,59 +122,59 @@ export async function POST(request) {
     // // ------------------------------
     // // Send registration email via EmailJS
     // // ------------------------------
-    // const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_WELCOME;
-    // const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    // const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_WELCOME;
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
-    // console.log("EmailJS config:", { templateId, serviceId, publicKey });
+    console.log("EmailJS config:", { templateId, serviceId, publicKey });
 
-    // if (templateId && serviceId && publicKey) {
-    //   const controller = new AbortController();
-    //   const timeout = setTimeout(() => controller.abort(), 10000);
+    if (templateId && serviceId && publicKey) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
-    //   try {
-    //     console.log("Sending welcome email to:", createdUser.email);
+      try {
+        console.log("Sending welcome email to:", createdUser.email);
 
-    //     const response = await fetch(
-    //       "https://api.emailjs.com/api/v1.0/email/send",
-    //       {
-    //         method: "POST",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({
-    //           service_id: serviceId,
-    //           template_id: templateId,
-    //           user_id: publicKey,
-    //           template_params: {
-    //             name: createdUser.name, // replaces {{name}} in your EmailJS template
-    //             email: createdUser.email, // recipient in template
-    //           },
-    //         }),
-    //         signal: controller.signal,
-    //       }
-    //     );
+        const response = await fetch(
+          "https://api.emailjs.com/api/v1.0/email/send",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              service_id: serviceId,
+              template_id: templateId,
+              user_id: publicKey,
+              template_params: {
+                name: createdUser.name, // replaces {{name}} in your EmailJS template
+                email: createdUser.email, // recipient in template
+              },
+            }),
+            signal: controller.signal,
+          }
+        );
 
-    //     clearTimeout(timeout);
+        clearTimeout(timeout);
 
-    //     console.log("EmailJS response status:", response.status);
-    //     const responseText = await response.text();
-    //     console.log("EmailJS response body:", responseText);
+        console.log("EmailJS response status:", response.status);
+        const responseText = await response.text();
+        console.log("EmailJS response body:", responseText);
 
-    //     if (!response.ok) {
-    //       console.error("EmailJS API returned an error");
-    //     } else {
-    //       console.log("Welcome email sent successfully!");
-    //     }
-    //   } catch (err) {
-    //     clearTimeout(timeout);
-    //     if (err.name === "AbortError") {
-    //       console.error("EmailJS request timed out");
-    //     } else {
-    //       console.error("EmailJS request error:", err);
-    //     }
-    //   }
-    // } else {
-    //   console.error("Missing EmailJS environment variables");
-    // }
+        if (!response.ok) {
+          console.error("EmailJS API returned an error");
+        } else {
+          console.log("Welcome email sent successfully!");
+        }
+      } catch (err) {
+        clearTimeout(timeout);
+        if (err.name === "AbortError") {
+          console.error("EmailJS request timed out");
+        } else {
+          console.error("EmailJS request error:", err);
+        }
+      }
+    } else {
+      console.error("Missing EmailJS environment variables");
+    }
 
     return NextResponse.json(
       {

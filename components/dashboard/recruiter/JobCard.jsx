@@ -29,14 +29,35 @@ export default function JobCard({ job, router, className = "", ...props }) {
   // Extract title from parentheses in job description
   const extractJobTitle = (description) => {
     if (!description) return null;
-    const match = description.match(/\(([^)]+)\)/);
-    return match ? match[1] : null;
+    // 1) If title is provided in parentheses: "(... )"
+    const paren = description.match(/\(([^)]+)\)/);
+    if (paren) return paren[1].trim();
+    // 2) Common pattern: "<Title> at <Company>..." -> grab the part before " at "
+    const atMatch = description.match(/^(.+?)\s+at\s+/i);
+    if (atMatch) return atMatch[1].trim();
+    // 3) If description contains "CTC" or "package" after title, capture leading segment
+    const ctcMatch = description.match(/^(.+?)\s+CTC[:\s]/i);
+    if (ctcMatch) return ctcMatch[1].trim();
+    // 4) Fallback: title is the first phrase up to a period or colon
+    const leadMatch = description.match(/^([^.:]+)[.:]/);
+    if (leadMatch) return leadMatch[1].trim();
+    return null;
   };
 
   // Get description without parentheses content
   const getCleanDescription = (description) => {
     if (!description) return "";
-    return description.replace(/\s*\([^)]*\)\s*/g, "").trim();
+    // Remove parentheses content
+    let cleaned = description.replace(/\s*\([^)]*\)\s*/g, "").trim();
+    // Remove leading "<Title> at <Company>." patterns so the description body remains
+    cleaned = cleaned.replace(/^.+?\s+at\s+[^.]+\.\s*/i, "");
+    // Also remove leading title followed directly by CTC or package (e.g. "DevOps Engineer. CTC: ...")
+    cleaned = cleaned.replace(/^.+?[.:]\s*/i, (match) => {
+      // If the match contains 'CTC' or 'package', strip only the leading phrase
+      if (/CTC|package/i.test(match)) return "";
+      return match;
+    });
+    return cleaned.trim();
   };
 
   const jobTitle =

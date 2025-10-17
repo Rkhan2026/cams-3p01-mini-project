@@ -1,14 +1,5 @@
-/**
- * NewJobForm Component
- * 
- * Handles job creation form with validation and submission logic.
- * Maintains existing fieldset organization and styling with all form fields.
- */
-
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarIcon } from "../../icons/DashboardIcons.jsx";
-import { SpinnerIcon } from "../../icons/UIIcons.jsx";
 import JobFormField from "./JobFormField.jsx";
 import TpoApprovalNote from "./TpoApprovalNote.jsx";
 import FormInput from "../../ui/FormInput.jsx";
@@ -24,7 +15,7 @@ const Button = ({ children, variant = "primary", className, ...props }) => {
   };
   return (
     <button
-      className={`${baseStyles} ${variantStyles[variant]} ${className || ''}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${className || ""}`}
       {...props}
     >
       {children}
@@ -32,27 +23,63 @@ const Button = ({ children, variant = "primary", className, ...props }) => {
   );
 };
 
-const NewJobForm = ({ onSubmit, loading }) => {
+export default function NewJobForm({ onSubmit, loading }) {
   const router = useRouter();
   const minDateTime = new Date().toISOString().slice(0, 16);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
     const formData = new FormData(e.target);
-    const title = formData.get("jobTitle");
-    const description = formData.get("jobDescription");
-    const combinedDescription = `(${title})\n\n${description}`;
+
+    const title = (formData.get("jobTitle") || "").toString().trim();
+    const description = (formData.get("jobDescription") || "")
+      .toString()
+      .trim();
+    const salary = (formData.get("salary") || "").toString().trim();
+
+    // Validate salary client-side: allow empty or format like '6 LPA' or '6.5 LPA'
+    if (salary) {
+      const salaryRe = /^\d+(?:\.\d+)?\s+LPA$/i;
+      if (!salaryRe.test(salary)) {
+        window.dispatchEvent(
+          new CustomEvent("toast", {
+            detail:
+              "Salary must be in the format 'X LPA' or 'X.Y LPA' (e.g. 6 LPA).",
+          })
+        );
+        return;
+      }
+    }
+
+    const degree = (formData.get("degree") || "").toString().trim();
+    const minCgpa = (formData.get("minCgpa") || "").toString().trim();
+    const classX = (formData.get("classXPercentage") || "").toString().trim();
+    const classXII = (formData.get("classXIIPercentage") || "")
+      .toString()
+      .trim();
+
+    const eligibilityParts = [];
+    if (degree) eligibilityParts.push(`Degree: ${degree}`);
+    if (minCgpa) eligibilityParts.push(`MinCGPA: ${minCgpa}`);
+    if (classX) eligibilityParts.push(`ClassX: ${classX}`);
+    if (classXII) eligibilityParts.push(`ClassXII: ${classXII}`);
+
+    const eligibilityCriteria = eligibilityParts.length
+      ? eligibilityParts.join("; ")
+      : null;
+
+    const salarySection = salary ? `\n\nSalary: ${salary}` : "";
+    const combinedDescription = title
+      ? `(${title})\n\n${description}${salarySection}`
+      : `${description}${salarySection}`;
 
     const jobData = {
       jobDescription: combinedDescription,
-      eligibilityCriteria: formData.get("eligibilityCriteria"),
+      eligibilityCriteria,
       applicationDeadline: formData.get("applicationDeadline"),
     };
 
-    if (onSubmit) {
-      onSubmit(jobData);
-    }
+    if (onSubmit) onSubmit(jobData);
   };
 
   return (
@@ -61,8 +88,10 @@ const NewJobForm = ({ onSubmit, loading }) => {
         <legend className="text-lg font-semibold text-gray-900 border-b border-gray-200 w-full pb-2 mb-2">
           Job Details
         </legend>
+
         <JobFormField id="jobTitle" label="Job Title" required>
           <FormInput
+            data-testid="input-jobTitle"
             id="jobTitle"
             name="jobTitle"
             type="text"
@@ -70,6 +99,7 @@ const NewJobForm = ({ onSubmit, loading }) => {
             placeholder="e.g., Software Engineer Intern"
           />
         </JobFormField>
+
         <JobFormField
           id="jobDescription"
           label="Job Description"
@@ -77,6 +107,7 @@ const NewJobForm = ({ onSubmit, loading }) => {
           required
         >
           <FormTextarea
+            data-testid="textarea-jobDescription"
             id="jobDescription"
             name="jobDescription"
             required
@@ -90,26 +121,87 @@ const NewJobForm = ({ onSubmit, loading }) => {
         <legend className="text-lg font-semibold text-gray-900 border-b border-gray-200 w-full pb-2 mb-2">
           Requirements
         </legend>
-        <JobFormField
-          id="eligibilityCriteria"
-          label="Eligibility Criteria"
-          helpText="Specify required education, skills, graduation year, etc."
-          required
-        >
-          <FormTextarea
-            id="eligibilityCriteria"
-            name="eligibilityCriteria"
-            required
-            rows={4}
-            placeholder="- B.Tech in CS/IT (2025 Batch)&#10;- Minimum 7.0 CGPA&#10;- Proficient in JavaScript and React"
-          />
-        </JobFormField>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <JobFormField id="degree" label="Degree / Course">
+            <FormInput
+              data-testid="input-degree"
+              id="degree"
+              name="degree"
+              type="text"
+              placeholder="e.g., B.Tech in CS/IT"
+            />
+          </JobFormField>
+
+          <JobFormField id="minCgpa" label="Minimum CGPA">
+            <FormInput
+              data-testid="input-minCgpa"
+              id="minCgpa"
+              name="minCgpa"
+              type="number"
+              step="0.01"
+              min="0"
+              max="10"
+              placeholder="e.g., 7.0"
+            />
+          </JobFormField>
+
+          <JobFormField id="classXPercentage" label="Class X Percentage">
+            <FormInput
+              data-testid="input-classX"
+              id="classXPercentage"
+              name="classXPercentage"
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              placeholder="e.g., 85"
+            />
+          </JobFormField>
+
+          <JobFormField id="classXIIPercentage" label="Class XII Percentage">
+            <FormInput
+              data-testid="input-classXII"
+              id="classXIIPercentage"
+              name="classXIIPercentage"
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              placeholder="e.g., 85"
+            />
+          </JobFormField>
+        </div>
       </fieldset>
 
       <fieldset className="space-y-6">
         <legend className="text-lg font-semibold text-gray-900 border-b border-gray-200 w-full pb-2 mb-2">
           Timeline
         </legend>
+
+        <JobFormField
+          id="salary"
+          label="Salary / Package"
+          helpText={
+            "Only the format 'X LPA' or 'X.Y LPA' is accepted in the form. Examples: '6 LPA', '6.5 LPA'."
+          }
+        >
+          <FormInput
+            data-testid="input-salary"
+            id="salary"
+            name="salary"
+            type="text"
+            placeholder="e.g., 6 LPA or 6.5 LPA"
+            aria-describedby="salary-help"
+            pattern="^\\d+(?:\\.\\d+)?\\s+LPA$"
+            title="Enter salary like '6 LPA' or '6.5 LPA'"
+          />
+          <p id="salary-help" className="mt-1 text-sm text-gray-500">
+            Please enter salary in the form "X LPA" (for example: 6 LPA or 6.5
+            LPA).
+          </p>
+        </JobFormField>
+
         <JobFormField
           id="applicationDeadline"
           label="Application Deadline"
@@ -118,6 +210,7 @@ const NewJobForm = ({ onSubmit, loading }) => {
         >
           <div className="relative">
             <FormInput
+              data-testid="input-deadline"
               id="applicationDeadline"
               name="applicationDeadline"
               type="datetime-local"
@@ -149,12 +242,9 @@ const NewJobForm = ({ onSubmit, loading }) => {
           disabled={loading}
           className="w-full sm:w-auto min-w-[180px]"
         >
-          {loading && <SpinnerIcon />}
           {loading ? "Submitting..." : "Submit for Approval"}
         </Button>
       </div>
     </form>
   );
-};
-
-export default NewJobForm;
+}

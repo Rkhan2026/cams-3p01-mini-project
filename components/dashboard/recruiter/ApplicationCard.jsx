@@ -1,6 +1,6 @@
 /**
  * ApplicationCard Component
- * 
+ *
  * Displays student application information with academic records and resume link.
  * Provides status update actions and handles application status changes.
  */
@@ -8,7 +8,7 @@
 import { DownloadIcon } from "../../icons/ActionIcons.jsx";
 import ApplicationActionButtons from "./ApplicationActionButtons.jsx";
 
-const ApplicationCard = ({ application, onStatusUpdate }) => {
+const ApplicationCard = ({ application, job, onStatusUpdate }) => {
   const getStatusBadge = (status) => {
     const styles = {
       APPLIED: "bg-blue-100 text-blue-800 border-blue-200",
@@ -30,6 +30,35 @@ const ApplicationCard = ({ application, onStatusUpdate }) => {
 
   const student = application.student;
   const academics = student.academicRecords || {};
+  // Try multiple places for job data so the UI works with different API shapes
+  // Prefer the `job` prop passed by the parent (jobForApp)
+  const jobSource = job || application.job || application.jobPosting || null;
+  // JobPosting in Prisma stores details in `jobDescription` (no separate title field).
+  // Reuse the same extraction logic used elsewhere: extract title inside parentheses.
+  const extractJobTitle = (description) => {
+    if (!description) return null;
+    const match = description.match(/\(([^)]+)\)/);
+    return match ? match[1] : null;
+  };
+
+  const getCleanDescription = (description) => {
+    if (!description) return "";
+    return description.replace(/\s*\([^)]*\)\s*/g, "").trim();
+  };
+
+  const rawDescription =
+    job?.jobDescription ||
+    jobSource?.jobDescription ||
+    application.description ||
+    application.jobDescription ||
+    "";
+  const jobTitle =
+    extractJobTitle(rawDescription) ||
+    jobSource?.title ||
+    application.jobTitle ||
+    application.title ||
+    null;
+  const jobDescription = getCleanDescription(rawDescription);
 
   return (
     <div className="bg-white border rounded-xl p-6 shadow-sm transition-shadow hover:shadow-lg">
@@ -37,6 +66,31 @@ const ApplicationCard = ({ application, onStatusUpdate }) => {
         <div>
           <h3 className="text-lg font-bold text-gray-900">{student.name}</h3>
           <p className="text-sm text-gray-500">{student.email}</p>
+
+          {/* Show only job title and brief description as requested */}
+          {jobTitle || jobDescription ? (
+            <div className="mt-2 text-sm">
+              {jobTitle ? (
+                <p className="font-medium text-gray-800">{jobTitle}</p>
+              ) : null}
+
+              {jobDescription ? (
+                <p
+                  className={`text-sm ${
+                    jobTitle
+                      ? "text-gray-600 mt-1"
+                      : "font-medium text-gray-800"
+                  } line-clamp-2`}
+                >
+                  {jobDescription}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-2 text-sm">
+              <p className="text-sm text-gray-500">Job details not available</p>
+            </div>
+          )}
         </div>
         {getStatusBadge(application.applicationStatus)}
       </div>
