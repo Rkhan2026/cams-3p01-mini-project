@@ -59,8 +59,7 @@ export default function PlacementReportEnhanced({ data, onRefresh }) {
 
     // ONLY show HIRED students - filter out all other statuses first
     let filtered = normalizedPlacements.filter(
-      (placement) =>
-        placement.status === "HIRED" || placement.status === "PLACED"
+      (placement) => placement.status === "HIRED"
     );
 
     if (filters.startDate) {

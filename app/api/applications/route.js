@@ -84,39 +84,30 @@ export async function POST(request) {
     }
 
     // If student is already hired/placed, enforce salary constraint: they may only apply
-    // to jobs whose salary <= 2 * their current CTC (if CTC is available in academicRecords)
+    // to jobs whose salary <= 2 * their current CTC (fetch CTC from hired job's description)
     const alreadyHired = await prisma.application.findFirst({
       where: {
         studentId: session.id,
         applicationStatus: { in: ["HIRED", "PLACED"] },
       },
+      include: {
+        job: {
+          select: {
+            jobDescription: true,
+          },
+        },
+      },
     });
 
     if (alreadyHired) {
-      // Try to read student's current CTC from academicRecords
-      const studentRecord = await prisma.student.findUnique({
-        where: { id: session.id },
-        select: { academicRecords: true },
-      });
-
+      // Extract student's current CTC from the hired job's description
       let studentCtc = null;
       try {
-        const records = studentRecord?.academicRecords
-          ? typeof studentRecord.academicRecords === "string"
-            ? JSON.parse(studentRecord.academicRecords)
-            : studentRecord.academicRecords
-          : null;
-
-        const possible =
-          records?.currentCtc ||
-          records?.current_ctc ||
-          records?.ctc ||
-          records?.currentSalary ||
-          records?.current_salary ||
-          records?.salary ||
-          null;
-
-        studentCtc = normalizeSalaryInput(possible);
+        const jobDescription = alreadyHired.job?.jobDescription;
+        if (jobDescription && typeof jobDescription === "string") {
+          // Parse salary from job description string that contains "Salary: X LPA"
+          studentCtc = parseSalaryFromText(jobDescription);
+        }
       } catch (e) {
         studentCtc = null;
       }
@@ -145,17 +136,51 @@ export async function POST(request) {
           jobSalary = null;
         }
 
-        if (jobSalary && jobSalary > 2 * studentCtc) {
-          return Response.json(
-            {
-              success: false,
-              error: {
-                message:
-                  "As you are already hired, you may only apply to jobs with salary up to twice your current CTC.",
+        if (jobSalary) {
+          const maxAllowedSalary = 2 * studentCtc;
+
+          if (jobSalary <= studentCtc) {
+            return Response.json(
+              {
+                success: false,
+                error: {
+                  message: "You do not meet the salary eligibility criteria",
+                },
+                unmetCriteria: [
+                  {
+                    field: "salary",
+                    required: `> ${studentCtc} LPA`,
+                    actual: `${jobSalary} LPA`,
+                    reason: `You cannot apply for jobs with salary ${jobSalary} LPA as it is less than or equal to your current CTC (${studentCtc} LPA).`,
+                  },
+                ],
               },
-            },
-            { status: 400 }
-          );
+              { status: 400 }
+            );
+          }
+
+          if (jobSalary > studentCtc && jobSalary <= maxAllowedSalary) {
+            return Response.json(
+              {
+                success: false,
+                error: {
+                  message: "You do not meet the salary eligibility criteria",
+                },
+                unmetCriteria: [
+                  {
+                    field: "salary",
+                    required: `> ${maxAllowedSalary} LPA`,
+                    actual: `${jobSalary} LPA`,
+                    reason: `You cannot apply for jobs with salary ${jobSalary} LPA (your current CTC: ${studentCtc} LPA). You can only apply to jobs with salary more than ${maxAllowedSalary} LPA.`,
+                  },
+                ],
+              },
+              { status: 400 }
+            );
+          }
+
+          // If jobSalary > maxAllowedSalary, they are eligible and can apply
+          // Continue with the application process
         }
       }
       // If we couldn't determine student CTC, allow application (constraint cannot be enforced)

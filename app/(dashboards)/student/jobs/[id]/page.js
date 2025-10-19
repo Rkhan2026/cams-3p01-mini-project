@@ -81,9 +81,82 @@ export default function JobDetailsPage() {
 
   // Heuristic eligibility check using job.eligibilityCriteria and studentProfile.academicRecords
   useEffect(() => {
-    const checkEligibility = (criteriaText, academicRecords) => {
+    const parseSalaryFromText = (text) => {
+      if (!text || typeof text !== "string") return null;
+      
+      // Try different salary formats
+      // Format 1: "Salary: X LPA"
+      let match = text.match(/salary:\s*(\d+(?:\.\d+)?)\s*lpa/i);
+      if (match) {
+        console.log("Parsing salary from:", text, "Result:", parseFloat(match[1]));
+        return parseFloat(match[1]);
+      }
+      
+      // Format 2: "CTC: ₹X,XX,XXX per annum" (convert to LPA)
+      match = text.match(/ctc:\s*₹(\d+(?:,\d+)*)\s*per\s*annum/i);
+      if (match) {
+        const amount = parseFloat(match[1].replace(/,/g, ''));
+        const lpa = amount / 100000; // Convert to LPA
+        console.log("Parsing salary from:", text, "Result:", lpa);
+        return lpa;
+      }
+      
+      console.log("Parsing salary from:", text, "Result: null");
+      return null;
+    };
+
+    const checkEligibility = async (criteriaText, academicRecords) => {
       if (!criteriaText || !criteriaText.trim())
         return { ok: true, reason: "" };
+
+      // Check if student is already hired first
+      try {
+        const response = await fetch("/api/applications");
+        const result = await response.json();
+        if (result.success) {
+          const hiredApplication = result.applications.find(
+            (app) => app.applicationStatus === "HIRED" || app.applicationStatus === "PLACED"
+          );
+          
+          console.log("Applications found:", result.applications);
+          console.log("Hired application:", hiredApplication);
+          
+          if (hiredApplication) {
+            // Get current CTC from hired job description
+            const currentCtc = parseSalaryFromText(hiredApplication.job?.jobDescription || "");
+            // Get new job salary
+            const newJobSalary = parseSalaryFromText(job?.jobDescription || "");
+            
+            console.log("Current CTC:", currentCtc, "New job salary:", newJobSalary);
+            
+            if (currentCtc && newJobSalary) {
+              const maxAllowedSalary = 2 * currentCtc;
+              
+              if (newJobSalary <= currentCtc) {
+                console.log("Blocking application: new salary <= current CTC");
+                return {
+                  ok: false,
+                  reason: `You cannot apply for jobs with salary ${newJobSalary} LPA as it is less than or equal to your current CTC (${currentCtc} LPA).`,
+                };
+              }
+              
+              if (newJobSalary > currentCtc && newJobSalary <= maxAllowedSalary) {
+                console.log("Blocking application: salary not high enough");
+                return {
+                  ok: false,
+                  reason: `You cannot apply for jobs with salary ${newJobSalary} LPA (your current CTC: ${currentCtc} LPA). You can only apply to jobs with salary more than ${maxAllowedSalary} LPA.`,
+                };
+              }
+            } else {
+              console.log("Could not parse salaries - currentCtc:", currentCtc, "newJobSalary:", newJobSalary);
+            }
+          } else {
+            console.log("No hired application found");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking hired status:", error);
+      }
 
       // Parse semicolon-separated 'Key: Value; Key: Value' format
       const parts = (criteriaText || "")
@@ -219,12 +292,14 @@ export default function JobDetailsPage() {
         return;
       }
 
-      const result = checkEligibility(
+      // Call async eligibility check
+      checkEligibility(
         job.eligibilityCriteria || "",
         parsedRecords || {}
-      );
-      setIsEligible(result.ok);
-      setEligibilityReason(result.reason || "");
+      ).then((result) => {
+        setIsEligible(result.ok);
+        setEligibilityReason(result.reason || "");
+      });
     }
   }, [job, studentProfile]);
   const handleApply = async () => {

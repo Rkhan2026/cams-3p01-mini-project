@@ -130,6 +130,7 @@ export default function NewJobForm({ onSubmit, loading }) {
               name="degree"
               type="text"
               placeholder="e.g., B.Tech in CS/IT"
+              required
             />
           </JobFormField>
 
@@ -193,8 +194,8 @@ export default function NewJobForm({ onSubmit, loading }) {
             type="text"
             placeholder="e.g., 6 LPA or 6.5 LPA"
             aria-describedby="salary-help"
-            pattern="^\\d+(?:\\.\\d+)?\\s+LPA$"
             title="Enter salary like '6 LPA' or '6.5 LPA'"
+            required
           />
           <p id="salary-help" className="mt-1 text-sm text-gray-500">
             Please enter salary in the form "X LPA" (for example: 6 LPA or 6.5
